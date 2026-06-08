@@ -91,7 +91,7 @@ void DiskManager::writeNode(int rrn, const BNode& node) {
 int DiskManager::allocNode() {
     Header h = readHeader();
     int rrn;
-    if (h.free_head != -1) {
+    if (reuse_ && h.free_head != -1) {
         rrn = h.free_head;
         // Read the recycled node to follow the free-list chain.
         // K[1] stores the next pointer (n == -1 marks free nodes).
@@ -114,4 +114,38 @@ void DiskManager::freeNode(int rrn) {
     writeNode(rrn, freed);
     h.free_head = rrn;
     writeHeader(h);
+}
+
+// Tamanho físico do arquivo: posiciona no fim e lê o offset. Não conta como
+// acesso a disco lógico (é uma medição de metadado, não leitura de nó).
+std::streamoff DiskManager::fileSizeBytes() {
+    file_.clear();
+    file_.seekg(0, std::ios::end);
+    return file_.tellg();
+}
+
+int DiskManager::totalNodes() {
+    return readHeader().total;
+}
+
+// Percorre a free list (n == -1, K[1] = próximo) contando os nós livres.
+// Cada salto lê um nó, mas usamos leitura crua sem incrementar o contador
+// lógico para não poluir as métricas das operações da árvore.
+int DiskManager::freeNodes() {
+    int cur = readHeader().free_head;
+    int count = 0;
+    while (cur != -1) {
+        char buf[PAGE_SIZE];
+        std::memset(buf, 0, PAGE_SIZE);
+        file_.clear();
+        file_.seekg(nodeOffset(cur));
+        file_.read(buf, PAGE_SIZE);
+        int n, next;
+        std::memcpy(&n,    buf, sizeof(int));
+        std::memcpy(&next, buf + sizeof(int) * (1 + M + 1), sizeof(int)); // K[1]
+        if (n != -1) break;  // proteção contra corrupção / loop
+        cur = next;
+        if (++count > readHeader().total + 1) break;  // anti-loop
+    }
+    return count;
 }

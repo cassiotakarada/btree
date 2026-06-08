@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="460" font-family="Helvetica,Arial,sans-serif" font-size="12">
+<rect width="760" height="460" fill="white"/>
+<text x="380.0" y="26" text-anchor="middle" font-size="16" font-weight="bold">Altura da árvore vs ordem m (N=100k)</text>
+<line x1="78" y1="396.0" x2="610" y2="396.0" stroke="#e5e7eb"/>
+<text x="70" y="400.0" text-anchor="end" fill="#374151">-1.3</text>
+<line x1="78" y1="328.0" x2="610" y2="328.0" stroke="#e5e7eb"/>
+<text x="70" y="332.0" text-anchor="end" fill="#374151">2.4</text>
+<line x1="78" y1="260.0" x2="610" y2="260.0" stroke="#e5e7eb"/>
+<text x="70" y="264.0" text-anchor="end" fill="#374151">6.1</text>
+<line x1="78" y1="192.0" x2="610" y2="192.0" stroke="#e5e7eb"/>
+<text x="70" y="196.0" text-anchor="end" fill="#374151">9.9</text>
+<line x1="78" y1="124.0" x2="610" y2="124.0" stroke="#e5e7eb"/>
+<text x="70" y="128.0" text-anchor="end" fill="#374151">13.6</text>
+<line x1="78" y1="56.0" x2="610" y2="56.0" stroke="#e5e7eb"/>
+<text x="70" y="60.0" text-anchor="end" fill="#374151">17.3</text>
+<line x1="78.0" y1="396" x2="78.0" y2="401" stroke="#374151"/>
+<text x="78.0" y="416" text-anchor="middle" fill="#374151">3</text>
+<line x1="104.3" y1="396" x2="104.3" y2="401" stroke="#374151"/>
+<text x="104.3" y="416" text-anchor="middle" fill="#374151">4</text>
+<line x1="124.8" y1="396" x2="124.8" y2="401" stroke="#374151"/>
+<text x="124.8" y="416" text-anchor="middle" fill="#374151">5</text>
+<line x1="167.8" y1="396" x2="167.8" y2="401" stroke="#374151"/>
+<text x="167.8" y="416" text-anchor="middle" fill="#374151">8</text>
+<line x1="231.3" y1="396" x2="231.3" y2="401" stroke="#374151"/>
+<text x="231.3" y="416" text-anchor="middle" fill="#374151">16</text>
+<line x1="294.8" y1="396" x2="294.8" y2="401" stroke="#374151"/>
+<text x="294.8" y="416" text-anchor="middle" fill="#374151">32</text>
+<line x1="358.3" y1="396" x2="358.3" y2="401" stroke="#374151"/>
+<text x="358.3" y="416" text-anchor="middle" fill="#374151">64</text>
+<line x1="399.1" y1="396" x2="399.1" y2="401" stroke="#374151"/>
+<text x="399.1" y="416" text-anchor="middle" fill="#374151">100</text>
+<line x1="421.7" y1="396" x2="421.7" y2="401" stroke="#374151"/>
+<text x="421.7" y="416" text-anchor="middle" fill="#374151">128</text>
+<line x1="485.2" y1="396" x2="485.2" y2="401" stroke="#374151"/>
+<text x="485.2" y="416" text-anchor="middle" fill="#374151">256</text>
+<line x1="548.7" y1="396" x2="548.7" y2="401" stroke="#374151"/>
+<text x="548.7" y="416" text-anchor="middle" fill="#374151">512</text>
+<line x1="610.0" y1="396" x2="610.0" y2="401" stroke="#374151"/>
+<text x="610.0" y="416" text-anchor="middle" fill="#374151">1000</text>
+<line x1="78" y1="56" x2="78" y2="396" stroke="#111"/>
+<line x1="78" y1="396" x2="610" y2="396" stroke="#111"/>
+<text x="344.0" y="444" text-anchor="middle" fill="#111">ordem m (escala log)</text>
+<text x="18" y="226.0" text-anchor="middle" fill="#111" transform="rotate(-90 18 226.0)">altura da árvore (níveis)</text>
+<polyline points="78.0,116.1 104.3,171.0 124.8,207.7 167.8,244.3 231.3,281.0 294.8,299.3 358.3,317.6 399.1,317.6 421.7,317.6 485.2,317.6 548.7,335.9 610.0,335.9" fill="none" stroke="#2563eb" stroke-width="2.2"/>
+<circle cx="78.0" cy="116.1" r="3" fill="#2563eb"/>
+<circle cx="104.3" cy="171.0" r="3" fill="#2563eb"/>
+<circle cx="124.8" cy="207.7" r="3" fill="#2563eb"/>
+<circle cx="167.8" cy="244.3" r="3" fill="#2563eb"/>
+<circle cx="231.3" cy="281.0" r="3" fill="#2563eb"/>
+<circle cx="294.8" cy="299.3" r="3" fill="#2563eb"/>
+<circle cx="358.3" cy="317.6" r="3" fill="#2563eb"/>
+<circle cx="399.1" cy="317.6" r="3" fill="#2563eb"/>
+<circle cx="421.7" cy="317.6" r="3" fill="#2563eb"/>
+<circle cx="485.2" cy="317.6" r="3" fill="#2563eb"/>
+<circle cx="548.7" cy="335.9" r="3" fill="#2563eb"/>
+<circle cx="610.0" cy="335.9" r="3" fill="#2563eb"/>
+<line x1="624" y1="66" x2="644" y2="66" stroke="#2563eb" stroke-width="2.6"/>
+<text x="648" y="70" fill="#111">rand</text>
+<polyline points="78.0,79.4 104.3,79.4 124.8,189.4 167.8,226.0 231.3,262.6 294.8,299.3 358.3,299.3 399.1,317.6 421.7,317.6 485.2,317.6 548.7,335.9 610.0,335.9" fill="none" stroke="#dc2626" stroke-width="2.2"/>
+<circle cx="78.0" cy="79.4" r="3" fill="#dc2626"/>
+<circle cx="104.3" cy="79.4" r="3" fill="#dc2626"/>
+<circle cx="124.8" cy="189.4" r="3" fill="#dc2626"/>
+<circle cx="167.8" cy="226.0" r="3" fill="#dc2626"/>
+<circle cx="231.3" cy="262.6" r="3" fill="#dc2626"/>
+<circle cx="294.8" cy="299.3" r="3" fill="#dc2626"/>
+<circle cx="358.3" cy="299.3" r="3" fill="#dc2626"/>
+<circle cx="399.1" cy="317.6" r="3" fill="#dc2626"/>
+<circle cx="421.7" cy="317.6" r="3" fill="#dc2626"/>
+<circle cx="485.2" cy="317.6" r="3" fill="#dc2626"/>
+<circle cx="548.7" cy="335.9" r="3" fill="#dc2626"/>
+<circle cx="610.0" cy="335.9" r="3" fill="#dc2626"/>
+<line x1="624" y1="86" x2="644" y2="86" stroke="#dc2626" stroke-width="2.6"/>
+<text x="648" y="90" fill="#111">seq</text>
+</svg>

@@ -1,4 +1,7 @@
 btree
+bench/bench
+tests/stress_btree
 *.o
 *.bin
 .m_stamp_*
+experiments/_*.log

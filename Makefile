@@ -14,9 +14,19 @@ TEST_TARGET := tests/stress_btree
 TEST_SRCS   := tests/stress_btree.cpp src/disk_manager.cpp src/btree.cpp
 TEST_OBJS   := $(TEST_SRCS:.cpp=.o)
 
-.PHONY: all clean run tests
+# Driver de benchmark (avaliação experimental). Compilado direto das fontes
+# (sem reaproveitar os .o, que carregam o M do build principal) para que o
+# orquestrador possa rebuildar com `make bench M=<ordem>` de forma confiável.
+BENCH_TARGET := bench/bench
+BENCH_SRCS   := bench/bench.cpp src/disk_manager.cpp src/btree.cpp
+
+.PHONY: all clean run tests bench
 
 all: $(STAMP) $(TARGET)
+
+# Recompila sempre (o M é compile-time e muda entre rodadas de experimento).
+bench:
+	$(CXX) $(CXXFLAGS) -DM=$(M) -o $(BENCH_TARGET) $(BENCH_SRCS)
 
 tests: $(STAMP) $(TEST_TARGET)
 	./$(TEST_TARGET)
@@ -38,4 +48,4 @@ run: all
 	./$(TARGET)
 
 clean:
-	rm -f $(OBJS) $(TEST_OBJS) $(TARGET) $(TEST_TARGET) *.bin .m_stamp_*
+	rm -f $(OBJS) $(TEST_OBJS) $(TARGET) $(TEST_TARGET) $(BENCH_TARGET) *.bin .m_stamp_*

@@ -131,14 +131,29 @@ Remoção  : 6710 acessos  (6.71 médio/op)  12.69 ms
 trabalho/
 ├── src/
 │   ├── types.hpp         — constantes (ORDER, MID, PAGE_SIZE), structs BNode e Header
-│   ├── disk_manager.hpp  — interface DiskManager (I/O binário + contador de acessos)
+│   ├── disk_manager.hpp  — interface DiskManager (I/O binário + contador + reuse toggle)
 │   ├── disk_manager.cpp  — implementação: readNode, writeNode, allocNode, freeNode
 │   ├── btree.hpp         — interface BTree
 │   └── btree.cpp         — mSearch, insertB, deleteB, printTree e auxiliares
 ├── main.cpp              — menu interativo e driver experimental
-├── Makefile              — compilação com variável M configurável
+├── bench/bench.cpp       — driver NÃO interativo p/ a avaliação experimental (CSV)
+├── experiments/
+│   ├── run_all.sh        — orquestra toda a matriz de experimentos
+│   └── make_tables.py    — agrega CSVs em tabelas (md/csv) e gráficos SVG
+├── results_order_m_impact/    — Exp.1: impacto da ordem m
+├── results_set_size_scaling/  — Exp.2: escala do conjunto (10³–10⁶)
+├── results_node_reuse/        — Exp.3: ocupação com/sem reaproveitamento
+├── results_cpu_vs_io/         — Exp.4: tempo de CPU vs espera de I/O
+├── results_graphs/            — imagens dos grafos (início e fim)
+├── tables/               — tabelas comparativas + gráficos (saída de make_tables.py)
+├── EXPERIMENTS.md        — guia da avaliação experimental (como reproduzir)
+├── Makefile              — compilação com variável M configurável (alvo `bench`)
 └── README.md             — este arquivo
 ```
+
+> **Avaliação experimental:** ver [`EXPERIMENTS.md`](EXPERIMENTS.md) para a bateria
+> completa de testes (ordem m, tamanho do conjunto, acessos a disco, ocupação do
+> arquivo e tempo CPU vs I/O), com instruções de reprodução.
 
 ---
 

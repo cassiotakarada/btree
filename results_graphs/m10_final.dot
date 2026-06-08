@@ -1,0 +1,16 @@
+digraph BTree {
+  graph [rankdir=TB, splines=line, nodesep=0.25, ranksep=0.6];
+  node  [shape=record, fontname="Helvetica", fontsize=10];
+  edge  [arrowsize=0.6];
+  n3 [label="{ RRN 3 | { <a0>  | <a1> 9 | <a2> 15 | <a3> 23 | <a4> 32 } }"];
+  n3:a0 -> n1;
+  n3:a1 -> n5;
+  n3:a2 -> n6;
+  n3:a3 -> n2;
+  n3:a4 -> n4;
+  n1 [label="{ RRN 1 | { <a0>  | <a1> 1 | <a2> 2 | <a3> 3 | <a4> 4 | <a5> 5 | <a6> 6 | <a7> 7 | <a8> 8 } }"];
+  n5 [label="{ RRN 5 | { <a0>  | <a1> 10 | <a2> 11 | <a3> 12 | <a4> 13 | <a5> 14 } }"];
+  n6 [label="{ RRN 6 | { <a0>  | <a1> 16 | <a2> 17 | <a3> 18 | <a4> 19 | <a5> 20 | <a6> 21 | <a7> 22 } }"];
+  n2 [label="{ RRN 2 | { <a0>  | <a1> 24 | <a2> 25 | <a3> 26 | <a4> 27 | <a5> 28 | <a6> 29 | <a7> 30 | <a8> 31 } }"];
+  n4 [label="{ RRN 4 | { <a0>  | <a1> 33 | <a2> 34 | <a3> 35 | <a4> 36 | <a5> 37 | <a6> 38 | <a7> 39 | <a8> 40 } }"];
+}
