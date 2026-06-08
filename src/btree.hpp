@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include <tuple>
 #include <vector>
 #include "disk_manager.hpp"
@@ -20,6 +21,13 @@ public:
     void deleteB(int x);
 
     void printTree();   // hierarchical indented print
+
+    // Altura em níveis: 0 = árvore vazia; 1 = só raiz; cresce a cada split que sobe.
+    int  height();
+
+    // Exporta a árvore em formato Graphviz DOT (cada nó vira um record com as chaves;
+    // arestas saem das "portas" A[i] do pai para o filho correspondente).
+    void exportDot(const std::string& path);
 
     int  diskAccesses() const { return dm_.diskAccesses(); }
     void resetCounter()       { dm_.resetCounter(); }
@@ -44,4 +52,6 @@ private:
     int findSuccessorLeaf(int childRRN, std::vector<int>& path);
 
     void printNode(int rrn, int depth);
+
+    void emitDotNode(int rrn, std::ostream& os);
 };

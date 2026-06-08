@@ -5,6 +5,14 @@
   #define M 5
 #endif
 
+// B-tree de ordem 2 é degenerada: o split divide um nó cheio (n=1) em
+//   ⌈m/2⌉−1 = 0 chaves à esquerda + 1 chave à direita + mediana promovida.
+// Isso deixa a metade esquerda VAZIA (zumbi), invalidando a árvore inteira.
+// Ordens 1 e 0 sequer fazem sentido. Exigimos M >= 3 em tempo de compilação.
+static_assert(M >= 3,
+    "M deve ser >= 3 (B-tree de ordem 2 ou menor é degenerada e o split "
+    "produziria nós com 0 chaves). Recompile com `make M=3` ou maior.");
+
 constexpr int ORDER    = M;
 constexpr int MAX_KEYS = M - 1;
 constexpr int MID      = (M + 1) / 2;  // ceil(m/2)

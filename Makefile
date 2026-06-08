@@ -10,9 +10,19 @@ OBJS    := $(SRCS:.cpp=.o)
 # When M changes, the stamp is outdated and all objects are rebuilt.
 STAMP := .m_stamp_$(M)
 
-.PHONY: all clean run
+TEST_TARGET := tests/stress_btree
+TEST_SRCS   := tests/stress_btree.cpp src/disk_manager.cpp src/btree.cpp
+TEST_OBJS   := $(TEST_SRCS:.cpp=.o)
+
+.PHONY: all clean run tests
 
 all: $(STAMP) $(TARGET)
+
+tests: $(STAMP) $(TEST_TARGET)
+	./$(TEST_TARGET)
+
+$(TEST_TARGET): $(TEST_OBJS)
+	$(CXX) $(CXXFLAGS) -DM=$(M) -o $@ $^
 
 $(STAMP):
 	rm -f .m_stamp_*
@@ -28,4 +38,4 @@ run: all
 	./$(TARGET)
 
 clean:
-	rm -f $(OBJS) $(TARGET) *.bin .m_stamp_*
+	rm -f $(OBJS) $(TEST_OBJS) $(TARGET) $(TEST_TARGET) *.bin .m_stamp_*

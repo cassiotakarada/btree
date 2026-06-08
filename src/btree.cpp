@@ -1,5 +1,6 @@
 #include "btree.hpp"
 #include <iostream>
+#include <fstream>
 #include <climits>
 #include <string>
 #include <stdexcept>
@@ -201,9 +202,15 @@ void BTree::deleteB(int x) {
     BNode pNode = dm_.readNode(p);
 
     if (pNode.A[0] != 0) {
-        // Nó interno: substitui K[i] pelo sucessor e remove o sucessor na folha q
+        // Nó interno: substitui K[i] pelo sucessor in-order (folha mais à esquerda
+        // da subárvore A[i]) e remove o sucessor lá. Para o reparo de underflow
+        // funcionar precisamos que `path` continue ordenado da raiz até a folha:
+        //   1) p é o pai imediato de A[i] (nível abaixo) → empilhe primeiro;
+        //   2) findSuccessorLeaf empilha os internos do caminho até a folha.
+        // (Empilhar na ordem inversa fazia o loop de underflow olhar pro avô em
+        //  vez do pai, e o `j` da busca por irmão acabava em -1, corrompendo o nó.)
+        path.push_back(p);
         int q = findSuccessorLeaf(pNode.A[i], path);
-        path.push_back(p);   // p vira pai da folha onde vamos apagar
 
         BNode q_no = dm_.readNode(q);
         pNode.K[i] = q_no.K[1];
@@ -363,4 +370,62 @@ void BTree::printTree() {
         return;
     }
     printNode(hdr.root, 0);
+}
+
+// B-tree é balanceada por construção: todas as folhas estão no mesmo nível.
+// Basta descer pelo A[0] contando níveis até chegar à folha.
+int BTree::height() {
+    Header hdr = dm_.readHeader();
+    int p = hdr.root;
+    int h = 0;
+    while (p != 0) {
+        ++h;
+        BNode node = dm_.readNode(p);
+        p = node.A[0];
+    }
+    return h;
+}
+
+// Recursivo: emite definição do nó (record com RRN no topo + chaves nas células,
+// uma porta <ai> para cada ponteiro de filho) e depois as arestas pai->filho.
+void BTree::emitDotNode(int rrn, std::ostream& os) {
+    if (rrn == 0) return;
+    BNode node = dm_.readNode(rrn);
+    if (node.n <= 0) return;
+
+    os << "  n" << rrn << " [label=\"{ RRN " << rrn << " | { ";
+    for (int i = 0; i <= node.n; ++i) {
+        if (i > 0) os << " | ";
+        os << "<a" << i << "> ";
+        if (i >= 1) os << node.K[i];
+    }
+    os << " } }\"];\n";
+
+    for (int i = 0; i <= node.n; ++i) {
+        if (node.A[i] != 0) {
+            os << "  n" << rrn << ":a" << i
+               << " -> n" << node.A[i] << ";\n";
+        }
+    }
+
+    for (int i = 0; i <= node.n; ++i)
+        emitDotNode(node.A[i], os);
+}
+
+void BTree::exportDot(const std::string& path) {
+    std::ofstream os(path);
+    if (!os) throw std::runtime_error("Não consegui abrir arquivo: " + path);
+
+    os << "digraph BTree {\n"
+       << "  graph [rankdir=TB, splines=line, nodesep=0.25, ranksep=0.6];\n"
+       << "  node  [shape=record, fontname=\"Helvetica\", fontsize=10];\n"
+       << "  edge  [arrowsize=0.6];\n";
+
+    Header hdr = dm_.readHeader();
+    if (hdr.root == 0) {
+        os << "  empty [label=\"(árvore vazia)\"];\n";
+    } else {
+        emitDotNode(hdr.root, os);
+    }
+    os << "}\n";
 }
