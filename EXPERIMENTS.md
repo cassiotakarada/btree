@@ -6,6 +6,9 @@ classe `DiskManager` lê/escreve registros de `PAGE_SIZE`); o benchmark apenas
 orquestra as operações e coleta métricas — nada da árvore é carregado em massa
 para a memória principal.
 
+> **Máquinas e comparação entre execuções:** ver [`MACHINES.md`](MACHINES.md)
+> (notebook × Titan Server/USP) e `tables/comparison.md`.
+
 ## Como reproduzir
 
 ```bash

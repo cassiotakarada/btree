@@ -5,3 +5,4 @@ tests/stress_btree
 *.bin
 .m_stamp_*
 experiments/_*.log
+.venv/
