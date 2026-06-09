@@ -2,17 +2,17 @@
 <rect width="760" height="460" fill="white"/>
 <text x="380.0" y="26" text-anchor="middle" font-size="16" font-weight="bold">Tempo total (ins+busca+rem) vs N</text>
 <line x1="78" y1="396.0" x2="610" y2="396.0" stroke="#e5e7eb"/>
-<text x="70" y="400.0" text-anchor="end" fill="#374151">5.5</text>
+<text x="70" y="400.0" text-anchor="end" fill="#374151">8.9</text>
 <line x1="78" y1="328.0" x2="610" y2="328.0" stroke="#e5e7eb"/>
-<text x="70" y="332.0" text-anchor="end" fill="#374151">43.6</text>
+<text x="70" y="332.0" text-anchor="end" fill="#374151">62.6</text>
 <line x1="78" y1="260.0" x2="610" y2="260.0" stroke="#e5e7eb"/>
-<text x="70" y="264.0" text-anchor="end" fill="#374151">344.7</text>
+<text x="70" y="264.0" text-anchor="end" fill="#374151">439.5</text>
 <line x1="78" y1="192.0" x2="610" y2="192.0" stroke="#e5e7eb"/>
-<text x="70" y="196.0" text-anchor="end" fill="#374151">2,724.6</text>
+<text x="70" y="196.0" text-anchor="end" fill="#374151">3,085.8</text>
 <line x1="78" y1="124.0" x2="610" y2="124.0" stroke="#e5e7eb"/>
-<text x="70" y="128.0" text-anchor="end" fill="#374151">21,535.6</text>
+<text x="70" y="128.0" text-anchor="end" fill="#374151">21,667.8</text>
 <line x1="78" y1="56.0" x2="610" y2="56.0" stroke="#e5e7eb"/>
-<text x="70" y="60.0" text-anchor="end" fill="#374151">170,218.9</text>
+<text x="70" y="60.0" text-anchor="end" fill="#374151">152,148.0</text>
 <line x1="78.0" y1="396" x2="78.0" y2="401" stroke="#374151"/>
 <text x="78.0" y="416" text-anchor="middle" fill="#374151">1000</text>
 <line x1="255.3" y1="396" x2="255.3" y2="401" stroke="#374151"/>
@@ -25,46 +25,46 @@
 <line x1="78" y1="396" x2="610" y2="396" stroke="#111"/>
 <text x="344.0" y="444" text-anchor="middle" fill="#111">N (escala log)</text>
 <text x="18" y="226.0" text-anchor="middle" fill="#111" transform="rotate(-90 18 226.0)">tempo total (ms)</text>
-<polyline points="78.0,321.0 255.3,254.4 432.7,169.5 610.0,79.4" fill="none" stroke="#2563eb" stroke-width="2.2"/>
-<circle cx="78.0" cy="321.0" r="3" fill="#2563eb"/>
-<circle cx="255.3" cy="254.4" r="3" fill="#2563eb"/>
-<circle cx="432.7" cy="169.5" r="3" fill="#2563eb"/>
+<polyline points="78.0,342.8 255.3,256.1 432.7,167.5 610.0,79.4" fill="none" stroke="#2563eb" stroke-width="2.2"/>
+<circle cx="78.0" cy="342.8" r="3" fill="#2563eb"/>
+<circle cx="255.3" cy="256.1" r="3" fill="#2563eb"/>
+<circle cx="432.7" cy="167.5" r="3" fill="#2563eb"/>
 <circle cx="610.0" cy="79.4" r="3" fill="#2563eb"/>
 <line x1="624" y1="66" x2="644" y2="66" stroke="#2563eb" stroke-width="2.6"/>
 <text x="648" y="70" fill="#111">m=3 rand</text>
-<polyline points="78.0,332.4 255.3,256.0 432.7,170.2 610.0,86.2" fill="none" stroke="#dc2626" stroke-width="2.2"/>
-<circle cx="78.0" cy="332.4" r="3" fill="#dc2626"/>
-<circle cx="255.3" cy="256.0" r="3" fill="#dc2626"/>
-<circle cx="432.7" cy="170.2" r="3" fill="#dc2626"/>
-<circle cx="610.0" cy="86.2" r="3" fill="#dc2626"/>
+<polyline points="78.0,337.6 255.3,253.5 432.7,167.1 610.0,80.6" fill="none" stroke="#dc2626" stroke-width="2.2"/>
+<circle cx="78.0" cy="337.6" r="3" fill="#dc2626"/>
+<circle cx="255.3" cy="253.5" r="3" fill="#dc2626"/>
+<circle cx="432.7" cy="167.1" r="3" fill="#dc2626"/>
+<circle cx="610.0" cy="80.6" r="3" fill="#dc2626"/>
 <line x1="624" y1="86" x2="644" y2="86" stroke="#dc2626" stroke-width="2.6"/>
 <text x="648" y="90" fill="#111">m=3 seq</text>
-<polyline points="78.0,364.8 255.3,293.8 432.7,209.8 610.0,122.0" fill="none" stroke="#059669" stroke-width="2.2"/>
-<circle cx="78.0" cy="364.8" r="3" fill="#059669"/>
-<circle cx="255.3" cy="293.8" r="3" fill="#059669"/>
-<circle cx="432.7" cy="209.8" r="3" fill="#059669"/>
-<circle cx="610.0" cy="122.0" r="3" fill="#059669"/>
+<polyline points="78.0,372.6 255.3,290.3 432.7,207.0 610.0,120.5" fill="none" stroke="#059669" stroke-width="2.2"/>
+<circle cx="78.0" cy="372.6" r="3" fill="#059669"/>
+<circle cx="255.3" cy="290.3" r="3" fill="#059669"/>
+<circle cx="432.7" cy="207.0" r="3" fill="#059669"/>
+<circle cx="610.0" cy="120.5" r="3" fill="#059669"/>
 <line x1="624" y1="106" x2="644" y2="106" stroke="#059669" stroke-width="2.6"/>
 <text x="648" y="110" fill="#111">m=100 rand</text>
-<polyline points="78.0,372.6 255.3,294.9 432.7,214.0 610.0,123.7" fill="none" stroke="#d97706" stroke-width="2.2"/>
-<circle cx="78.0" cy="372.6" r="3" fill="#d97706"/>
-<circle cx="255.3" cy="294.9" r="3" fill="#d97706"/>
-<circle cx="432.7" cy="214.0" r="3" fill="#d97706"/>
-<circle cx="610.0" cy="123.7" r="3" fill="#d97706"/>
+<polyline points="78.0,370.0 255.3,288.8 432.7,207.4 610.0,121.7" fill="none" stroke="#d97706" stroke-width="2.2"/>
+<circle cx="78.0" cy="370.0" r="3" fill="#d97706"/>
+<circle cx="255.3" cy="288.8" r="3" fill="#d97706"/>
+<circle cx="432.7" cy="207.4" r="3" fill="#d97706"/>
+<circle cx="610.0" cy="121.7" r="3" fill="#d97706"/>
 <line x1="624" y1="126" x2="644" y2="126" stroke="#d97706" stroke-width="2.6"/>
 <text x="648" y="130" fill="#111">m=100 seq</text>
-<polyline points="78.0,313.1 255.3,280.4 432.7,204.7 610.0,117.6" fill="none" stroke="#7c3aed" stroke-width="2.2"/>
-<circle cx="78.0" cy="313.1" r="3" fill="#7c3aed"/>
-<circle cx="255.3" cy="280.4" r="3" fill="#7c3aed"/>
-<circle cx="432.7" cy="204.7" r="3" fill="#7c3aed"/>
-<circle cx="610.0" cy="117.6" r="3" fill="#7c3aed"/>
+<polyline points="78.0,366.3 255.3,284.7 432.7,200.1 610.0,116.9" fill="none" stroke="#7c3aed" stroke-width="2.2"/>
+<circle cx="78.0" cy="366.3" r="3" fill="#7c3aed"/>
+<circle cx="255.3" cy="284.7" r="3" fill="#7c3aed"/>
+<circle cx="432.7" cy="200.1" r="3" fill="#7c3aed"/>
+<circle cx="610.0" cy="116.9" r="3" fill="#7c3aed"/>
 <line x1="624" y1="146" x2="644" y2="146" stroke="#7c3aed" stroke-width="2.6"/>
 <text x="648" y="150" fill="#111">m=1000 rand</text>
-<polyline points="78.0,323.8 255.3,281.1 432.7,203.6 610.0,118.2" fill="none" stroke="#0891b2" stroke-width="2.2"/>
-<circle cx="78.0" cy="323.8" r="3" fill="#0891b2"/>
-<circle cx="255.3" cy="281.1" r="3" fill="#0891b2"/>
-<circle cx="432.7" cy="203.6" r="3" fill="#0891b2"/>
-<circle cx="610.0" cy="118.2" r="3" fill="#0891b2"/>
+<polyline points="78.0,364.1 255.3,283.7 432.7,202.9 610.0,117.2" fill="none" stroke="#0891b2" stroke-width="2.2"/>
+<circle cx="78.0" cy="364.1" r="3" fill="#0891b2"/>
+<circle cx="255.3" cy="283.7" r="3" fill="#0891b2"/>
+<circle cx="432.7" cy="202.9" r="3" fill="#0891b2"/>
+<circle cx="610.0" cy="117.2" r="3" fill="#0891b2"/>
 <line x1="624" y1="166" x2="644" y2="166" stroke="#0891b2" stroke-width="2.6"/>
 <text x="648" y="170" fill="#111">m=1000 seq</text>
 </svg>
