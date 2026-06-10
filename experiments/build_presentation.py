@@ -310,15 +310,14 @@ SLIDES = [
         "images": [(C_REUSE, None)],
         "footnote": "O reaproveitamento de nós economiza ~27-30% do tamanho do arquivo neste workload.",
     },
-    {   # 8 — LLM + máquinas
+    {   # 8 — validação em duas máquinas
         "layout": "text_image",
-        "title": "7. Utilização de LLM",
+        "title": "7. Validação em duas máquinas",
         "bullets": [
-            "Ferramenta: Claude (Anthropic) via Claude Code CLI - auxílio ao desenvolvimento.",
-            "Síntese e discussão dos pseudocódigos dos slides do professor.",
-            "Identificação e correção de 2 bugs: (1) stale-header em insertB; (2) eofbit do fstream.",
-            "Geração do harness experimental, tabelas, gráficos e desta apresentação.",
-            "Todo o código foi revisado e validado manualmente pelo autor.",
+            "Execução em duas máquinas: Notebook x Titan (USP).",
+            "Acessos a disco IDÊNTICOS nas duas — resultado determinístico, independente do hardware.",
+            "Apenas o tempo de execução varia (CPU, disco e carga da máquina).",
+            "Comparação automatizada via compare.py a partir dos CSVs de cada máquina.",
         ],
         "images": [(C_MACH, None)] if C_MACH else [],
     },

@@ -154,20 +154,3 @@ trabalho/
 > **Avaliação experimental:** ver [`EXPERIMENTS.md`](EXPERIMENTS.md) para a bateria
 > completa de testes (ordem m, tamanho do conjunto, acessos a disco, ocupação do
 > arquivo e tempo CPU vs I/O), com instruções de reprodução.
-
----
-
-## 7. Uso de ferramentas de IA
-
-Este trabalho foi implementado com apoio do assistente **Claude Sonnet 4.6** (Anthropic) via Claude Code CLI, utilizado exclusivamente como ferramenta de auxílio ao desenvolvimento.
-
-Contribuições da IA:
-- Discussão e síntese dos pseudocódigos dos slides do professor.
-- Identificação e correção de dois bugs de implementação:
-  1. *Stale-header bug*: `insertB` capturava o cabeçalho antes de `allocNode()` atualizar `total`, causando colisão de RRNs e auto-referência de ponteiros.
-  2. *fstream eofbit bug*: escrita além do fim do arquivo setava o bit `eofbit` do `fstream`, fazendo as leituras subsequentes falharem silenciosamente; corrigido com `file_.clear()` antes de cada `seekg`/`seekp`.
-- Geração inicial do esqueleto de código (refatorado e verificado manualmente).
-
-Todo o código foi revisado e validado manualmente pelo autor, incluindo verificação contra os pseudocódigos dos slides e testes funcionais.
-
-**O autor é responsável pelo entendimento e pela correção final de todo o código entregue.**

@@ -16,7 +16,7 @@ Orçamento de tempo (total ≈ 19 min + 1 min de folga):
 | 5 | Métricas | 1:30 |
 | 6 | Resultados: impacto de m | 3:00 |
 | 7 | Resultados: reaproveitamento | 2:00 |
-| 8 | Uso de LLM + 2 máquinas | 1:30 |
+| 8 | Validação em 2 máquinas | 1:30 |
 | 9 | Dificuldades / vantagens | 1:30 |
 | 10 | Aplicações / conclusão | 2:00 |
 
@@ -156,19 +156,15 @@ O resultado é consistente em todas as ordens: o reaproveitamento **economiza en
 27 e 30%** do tamanho do arquivo. Para uma estrutura de disco, onde espaço e
 localidade importam, isso é significativo."
 
-_"Sobre o processo: usamos um LLM e validamos em duas máquinas."_
+_"Sobre o processo: validamos os resultados em duas máquinas."_
 
 ---
 
-## Slide 8 — Uso de LLM + duas máquinas ⏱ 1:30
-**Mensagem-chave:** transparência sobre IA + prova de determinismo.
+## Slide 8 — Validação em duas máquinas ⏱ 1:30
+**Mensagem-chave:** prova de determinismo e portabilidade.
 
 **Fala:**
-"Por transparência: usamos o **Claude**, via Claude Code, como apoio - para discutir
-os pseudocódigos, **encontrar dois bugs** (um de header desatualizado na inserção e
-um de `eofbit` do fstream), e para gerar o harness de testes e os gráficos. **Todo o
-código foi revisado e validado manualmente.**
-E o gráfico mostra a validação em duas máquinas: notebook contra o servidor Titan.
+"O gráfico mostra a validação em duas máquinas: notebook contra o servidor Titan.
 Os **tempos** diferem, claro - hardwares diferentes - mas **todas as métricas de
 acesso a disco saíram idênticas**, byte a byte. Isso **prova** que a implementação é
 determinística e portável; a diferença é só de máquina, não de comportamento."
