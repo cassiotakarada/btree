@@ -1,9 +1,4 @@
 #!/usr/bin/env python3
-# =============================================================================
-# build_roteiro_pdf.py — Converte o roteiro de apresentação (Markdown) em PDF
-# de documento (A4), usando reportlab + fonte Unicode DejaVuSans.
-# Uso: python3 experiments/build_roteiro_pdf.py
-# =============================================================================
 import os
 import re
 
@@ -44,7 +39,6 @@ BULLET = ParagraphStyle("BULLET", parent=BODY, leftIndent=12, bulletIndent=2)
 QUOTE = ParagraphStyle("QUOTE", parent=BODY, leftIndent=10, textColor=MUTED,
                        fontSize=9, leading=12.5)
 
-
 def inline(text):
     text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     for emo, rep in (("⏱", ""), ("⭐", " (*)"), ("🎯", ""), ("✅", "[ok]"),
@@ -56,12 +50,11 @@ def inline(text):
     text = re.sub(r"(?<!\w)_([^_]+)_(?!\w)", r"<i>\1</i>", text)
     return text.strip()
 
-
 def parse_table(block):
     rows = []
     for ln in block:
         cells = [c.strip() for c in ln.strip().strip("|").split("|")]
-        if all(set(c) <= set("-: ") for c in cells):  # separador
+        if all(set(c) <= set("-: ") for c in cells):
             continue
         rows.append(cells)
     if not rows:
@@ -82,16 +75,13 @@ def parse_table(block):
     ]))
     return t
 
-
 def build():
     with open(SRC, encoding="utf-8") as f:
         lines = f.read().split("\n")
 
     flow = []
-    # Buffer para juntar linhas "soft-wrapped" (quebradas só por largura) num
-    # único parágrafo — assim **negrito** que atravessa quebra de linha funciona.
-    buf = []          # textos acumulados
-    kind = None       # 'p' | 'bullet' | 'quote'
+    buf = []
+    kind = None
 
     def flush():
         nonlocal buf, kind
@@ -112,10 +102,10 @@ def build():
         ln = lines[i]
         s = ln.strip()
 
-        if not s:                                  # linha em branco
+        if not s:
             flush(); flow.append(Spacer(1, 4)); i += 1; continue
 
-        if s.startswith("|"):                      # tabela
+        if s.startswith("|"):
             flush()
             block = []
             while i < n and lines[i].strip().startswith("|"):
@@ -137,19 +127,19 @@ def build():
             flow.append(HRFlowable(width="100%", thickness=0.6,
                                    color=colors.HexColor("#cbd5e1")))
             flow.append(Spacer(1, 2))
-        elif s.startswith("> "):                   # citação (pode quebrar)
+        elif s.startswith("> "):
             if kind != "quote":
                 flush(); kind = "quote"
             buf.append(s[2:])
-        elif s.startswith("- ") or s.startswith("• "):   # novo item de lista
+        elif s.startswith("- ") or s.startswith("• "):
             flush(); kind = "bullet"; buf.append(s[2:])
-        elif s.startswith("→"):                     # resposta de Q&A
+        elif s.startswith("→"):
             flush(); kind = "quote"; buf.append(s)
-        elif s.startswith("**"):                    # rótulo/inicia parágrafo
+        elif s.startswith("**"):
             flush(); kind = "p"; buf.append(s)
-        elif re.match(r"^_.*_$", s):               # linha só em itálico
+        elif re.match(r"^_.*_$", s):
             flush(); flow.append(Paragraph(inline(s), BODY))
-        else:                                      # prosa: continua o buffer
+        else:
             if not buf:
                 kind = "p"
             buf.append(s)
@@ -173,7 +163,6 @@ def build():
 
     doc.build(flow, onFirstPage=footer, onLaterPages=footer)
     print("PDF:", DST)
-
 
 if __name__ == "__main__":
     build()

@@ -6,17 +6,12 @@ TARGET  := btree
 SRCS    := main.cpp src/disk_manager.cpp src/btree.cpp
 OBJS    := $(SRCS:.cpp=.o)
 
-# Stamp file captures the current M value.
-# When M changes, the stamp is outdated and all objects are rebuilt.
 STAMP := .m_stamp_$(M)
 
 TEST_TARGET := tests/stress_btree
 TEST_SRCS   := tests/stress_btree.cpp src/disk_manager.cpp src/btree.cpp
 TEST_OBJS   := $(TEST_SRCS:.cpp=.o)
 
-# Driver de benchmark (avaliação experimental). Compilado direto das fontes
-# (sem reaproveitar os .o, que carregam o M do build principal) para que o
-# orquestrador possa rebuildar com `make bench M=<ordem>` de forma confiável.
 BENCH_TARGET := bench/bench
 BENCH_SRCS   := bench/bench.cpp src/disk_manager.cpp src/btree.cpp
 
@@ -24,7 +19,6 @@ BENCH_SRCS   := bench/bench.cpp src/disk_manager.cpp src/btree.cpp
 
 all: $(STAMP) $(TARGET)
 
-# Recompila sempre (o M é compile-time e muda entre rodadas de experimento).
 bench:
 	$(CXX) $(CXXFLAGS) -DM=$(M) -o $(BENCH_TARGET) $(BENCH_SRCS)
 

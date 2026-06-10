@@ -1,15 +1,4 @@
 #!/usr/bin/env python3
-# =============================================================================
-# build_presentation.py — Gera a apresentação final (PPTX + PDF) da Árvore B,
-# seguindo o modelo de slides do enunciado (Slides 1–10 + extras) e populando
-# com os RESULTADOS REAIS dos experimentos (pastas results_*/ e _baseline/).
-#
-# Funde a intenção do guia APRESENTACAO_PPT.md (btree-main) com os dados reais
-# desta implementação. Saída em trabalho/apresentacao/.
-#
-# Requer (venv): python-pptx, reportlab, matplotlib.
-# Uso: python3 experiments/build_presentation.py
-# =============================================================================
 import csv
 import os
 from collections import defaultdict
@@ -29,13 +18,9 @@ ACCENT2 = "#dc2626"
 INK = "#111827"
 MUTED = "#6b7280"
 
-FIG = (8.8, 4.9)   # tamanho dos gráficos (maior = mais legível)
+FIG = (8.8, 4.9)
 DPI = 165
 
-
-# --------------------------------------------------------------------------- #
-# Carregamento de dados
-# --------------------------------------------------------------------------- #
 def load(path):
     rows = []
     if not os.path.exists(path):
@@ -53,25 +38,18 @@ def load(path):
             rows.append(r)
     return rows
 
-
 ORDER = load(os.path.join(ROOT, "results_order_m_impact", "data.csv"))
 SCALE = load(os.path.join(ROOT, "results_set_size_scaling", "data.csv"))
 REUSE = load(os.path.join(ROOT, "results_node_reuse", "data.csv"))
 ORDER_LAP = load(os.path.join(ROOT, "_baseline", "results_order_m_impact", "data.csv"))
 
-
 def by_phase(rows, phase, mode=None):
     return [r for r in rows if r["phase"] == phase and (not mode or r["mode"] == mode)]
 
-
-# --------------------------------------------------------------------------- #
-# Gráficos (matplotlib -> PNG)
-# --------------------------------------------------------------------------- #
 def _save(fig, name):
     p = os.path.join(ASSETS, name)
     fig.tight_layout(); fig.savefig(p); plt.close(fig)
     return p
-
 
 def chart_io_vs_m():
     fig, ax = plt.subplots(figsize=FIG, dpi=DPI)
@@ -84,7 +62,6 @@ def chart_io_vs_m():
     ax.grid(True, alpha=0.3); ax.legend(fontsize=11)
     return _save(fig, "chart_io_vs_m.png")
 
-
 def chart_height_vs_m():
     fig, ax = plt.subplots(figsize=FIG, dpi=DPI)
     for mode, color, lbl in (("rand", ACCENT, "aleatório"), ("seq", ACCENT2, "sequencial")):
@@ -95,7 +72,6 @@ def chart_height_vs_m():
     ax.set_title("Altura da árvore vs ordem m  (N = 100.000)")
     ax.grid(True, alpha=0.3); ax.legend(fontsize=11)
     return _save(fig, "chart_height_vs_m.png")
-
 
 def chart_io_vs_N():
     fig, ax = plt.subplots(figsize=FIG, dpi=DPI)
@@ -108,7 +84,6 @@ def chart_io_vs_N():
     ax.set_title("Escalabilidade: I/O por busca vs N  (aleatório)")
     ax.grid(True, alpha=0.3); ax.legend(fontsize=11)
     return _save(fig, "chart_io_vs_N.png")
-
 
 def chart_reuse():
     import numpy as np
@@ -129,7 +104,6 @@ def chart_reuse():
     ax.set_title("Ocupação do arquivo após churn: com vs sem free list")
     ax.grid(True, axis="y", alpha=0.3); ax.legend(fontsize=11)
     return _save(fig, "chart_reuse.png")
-
 
 def chart_machines():
     import numpy as np
@@ -154,7 +128,6 @@ def chart_machines():
     ax.grid(True, axis="y", alpha=0.3); ax.legend(fontsize=11)
     return _save(fig, "chart_machines.png")
 
-
 print("gerando gráficos...")
 C_IO_M = chart_io_vs_m()
 C_H_M = chart_height_vs_m()
@@ -162,10 +135,6 @@ C_IO_N = chart_io_vs_N()
 C_REUSE = chart_reuse()
 C_MACH = chart_machines()
 
-
-# --------------------------------------------------------------------------- #
-# Tabelas dinâmicas (dados reais)
-# --------------------------------------------------------------------------- #
 def order_table():
     by_m = defaultdict(dict)
     for r in ORDER:
@@ -182,7 +151,6 @@ def order_table():
                      f'{d["insert"]["file_bytes"]/1024:,.0f}'])
     return headers, rows
 
-
 def reuse_table():
     ref = [r for r in REUSE if r["phase"] == "churn_refill"]
     by = defaultdict(dict)
@@ -198,19 +166,14 @@ def reuse_table():
                          f'{on["file_bytes"]/1024:,.0f}', f"{save:.0f}%"])
     return headers, rows
 
-
 ORDER_HEADERS, ORDER_ROWS = order_table()
 REUSE_HEADERS, REUSE_ROWS = reuse_table()
 
-
-# --------------------------------------------------------------------------- #
-# Modelo de slides
-# --------------------------------------------------------------------------- #
 def G(name):
     return os.path.join(GRAPHS, name)
 
 SLIDES = [
-    {   # 1 — capa
+    {
         "layout": "cover",
         "title": "Árvore B em Memória Secundária",
         "subtitle": "Implementação de uma classe Árvore B de ordem m operando estritamente em disco",
@@ -221,7 +184,7 @@ SLIDES = [
             "Alunos: Cássio Takarada  ·  Cézio Luiz Ferreira Junior",
         ],
     },
-    {   # 2 — decisões (imagem larga em faixa)
+    {
         "layout": "image_full",
         "title": "2. Decisões de implementação",
         "bullets": [
@@ -233,7 +196,7 @@ SLIDES = [
         ],
         "images": [(G("m3_final.png"), "Árvore B (m=3) com 40 chaves — exportada do nosso código (Graphviz); cada caixa mostra o RRN do nó em disco")],
     },
-    {   # 3 — métodos
+    {
         "layout": "bullets",
         "title": "3. Métodos implementados",
         "bullets": [
@@ -246,7 +209,7 @@ SLIDES = [
             "bench - driver experimental não interativo (CSV de métricas).",
         ],
     },
-    {   # 3b — RESUMO de tudo que o código faz (núcleo + extras)
+    {
         "layout": "two_col",
         "title": "Resumo — tudo que o código faz (núcleo + extras)",
         "left_title": "Núcleo — Árvore B em disco",
@@ -270,7 +233,7 @@ SLIDES = [
             "Testes de stress + menu interativo (CRUD + métricas).",
         ],
     },
-    {   # 4 — experimentos
+    {
         "layout": "text_image",
         "title": "4. Análises efetuadas (experimentos)",
         "bullets": [
@@ -283,7 +246,7 @@ SLIDES = [
         ],
         "images": [(C_IO_N, None)],
     },
-    {   # 5 — métricas
+    {
         "layout": "text_image",
         "title": "5. Métricas utilizadas",
         "bullets": [
@@ -296,21 +259,21 @@ SLIDES = [
         ],
         "images": [(C_H_M, None)],
     },
-    {   # 6 — tabela impacto de m
+    {
         "layout": "table_image",
         "title": "6. Tabela de Resultados - impacto de m (N=10^5, aleatório)",
         "table": (ORDER_HEADERS, ORDER_ROWS),
         "images": [(C_IO_M, None)],
         "footnote": "I/O por busca cai de 13,25 (m=3, altura 14) para 2,00 (m>=512, altura 2). Ganho satura por volta de m~64-128.",
     },
-    {   # 7 — reaproveitamento
+    {
         "layout": "table_image",
         "title": "6b. Resultados - reaproveitamento de nós (churn)",
         "table": (REUSE_HEADERS, REUSE_ROWS),
         "images": [(C_REUSE, None)],
         "footnote": "O reaproveitamento de nós economiza ~27-30% do tamanho do arquivo neste workload.",
     },
-    {   # 8 — validação em duas máquinas
+    {
         "layout": "text_image",
         "title": "7. Validação em duas máquinas",
         "bullets": [
@@ -321,7 +284,7 @@ SLIDES = [
         ],
         "images": [(C_MACH, None)] if C_MACH else [],
     },
-    {   # 9 — dificuldades
+    {
         "layout": "bullets",
         "title": "8. Dificuldades · Vantagens x Desvantagens",
         "bullets": [
@@ -331,7 +294,7 @@ SLIDES = [
             "Trade-off central: m maior => menos I/O, mais CPU por nó.",
         ],
     },
-    {   # 9 — aplicações práticas
+    {
         "layout": "bullets",
         "title": "9. Aplicações práticas",
         "bullets": [
@@ -341,7 +304,7 @@ SLIDES = [
             "Onde eu usaria: como índice (primário ou secundário) de um banco de dados em disco - exatamente o cenário deste trabalho.",
         ],
     },
-    {   # 10 — conclusão e referências
+    {
         "layout": "bullets",
         "title": "10. Conclusão e Referências",
         "bullets": [
@@ -357,10 +320,6 @@ SLIDES = [
     },
 ]
 
-
-# --------------------------------------------------------------------------- #
-# PPTX
-# --------------------------------------------------------------------------- #
 def build_pptx(path):
     from pptx import Presentation
     from pptx.util import Inches, Pt, Emu
@@ -476,7 +435,7 @@ def build_pptx(path):
                 add_text(slide, Inches(0.4), Inches(6.55), Inches(12.5), Inches(0.5),
                          [(s["footnote"], 11, MUTED, False, False)])
 
-        else:  # bullets
+        else:
             add_text(slide, Inches(0.7), body_top, Inches(12.0), Inches(5.8),
                      [(b, 16, INK, False, True) for b in s["bullets"]])
 
@@ -485,10 +444,6 @@ def build_pptx(path):
     prs.save(path)
     print("PPTX:", path)
 
-
-# --------------------------------------------------------------------------- #
-# PDF (reportlab)
-# --------------------------------------------------------------------------- #
 def build_pdf(path):
     from reportlab.pdfgen import canvas
     from reportlab.lib.utils import ImageReader
@@ -603,7 +558,7 @@ def build_pdf(path):
                 for k, ln in enumerate(wrap(s["footnote"], "Helvetica-Oblique", 10, W - 70)):
                     c.drawString(36, 56 - k * 13, ln)
 
-        else:  # bullets
+        else:
             bullets(s["bullets"], 40, top, W - 110, size=14, lh=20, gap=6)
 
         c.setFillColor(HexColor(MUTED)); c.setFont("Helvetica", 8)
@@ -613,7 +568,6 @@ def build_pdf(path):
 
     c.save()
     print("PDF:", path)
-
 
 if __name__ == "__main__":
     build_pptx(os.path.join(OUT, "APRESENTACAO.pptx"))

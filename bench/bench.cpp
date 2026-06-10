@@ -1,21 +1,3 @@
-// =============================================================================
-// bench.cpp — driver NÃO interativo para a avaliação experimental do trabalho.
-//
-// A ordem m da árvore é a constante de compilação M (igual ao programa
-// principal). Por isso o binário é recompilado para cada m (ver Makefile alvo
-// `bench` + script experiments/run_all.sh). Tudo o mais (N, modo, reuso, fase)
-// é parâmetro de linha de comando, para o orquestrador varrer a matriz de
-// experimentos sem intervenção humana.
-//
-// Métricas coletadas por fase:
-//   - acessos ao disco (readNode + writeNode) e média por operação
-//   - tempo de parede (wall), tempo de CPU de usuário e de sistema (getrusage)
-//   - "espera de I/O" estimada = wall - (user + sys)
-//   - altura da árvore, nós físicos no arquivo, nós livres, tamanho do arquivo
-//
-// Saída: uma linha CSV por fase em --csv (append). Cabeçalho escrito se o
-// arquivo ainda não existir.
-// =============================================================================
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -34,20 +16,19 @@
 namespace {
 
 struct Args {
-    std::string op    = "full";   // insert | search | delete | full | churn
+    std::string op    = "full";
     long        N     = 1000;
-    std::string mode  = "rand";   // rand | seq
+    std::string mode  = "rand";
     bool        reuse = true;
     unsigned    seed  = 42;
     std::string file  = "_bench.bin";
-    std::string csv   = "";       // se vazio, imprime no stdout
-    std::string label = "";       // descrição do experimento
-    int         mLabel = M;       // ordem m (apenas rótulo; M é compile-time)
-    std::string dotPrefix = "";   // se não vazio, exporta .dot nos checkpoints
-    std::vector<long> dotAt;      // contagens de inserção para snapshot
+    std::string csv   = "";
+    std::string label = "";
+    int         mLabel = M;
+    std::string dotPrefix = "";
+    std::vector<long> dotAt;
 };
 
-// Tempo de CPU acumulado pelo processo (segundos).
 struct CpuTimes { double user; double sys; };
 CpuTimes cpuNow() {
     rusage ru{};
@@ -89,15 +70,11 @@ Args parseArgs(int argc, char** argv) {
     return a;
 }
 
-// Gera o conjunto de chaves de acordo com o modo.
 std::vector<int> makeKeys(long N, const std::string& mode, unsigned seed) {
     std::vector<int> keys(static_cast<size_t>(N));
     if (mode == "seq") {
         for (long i = 0; i < N; ++i) keys[static_cast<size_t>(i)] = static_cast<int>(i + 1);
     } else {
-        // Permutação aleatória de 1..N: garante N chaves DISTINTAS (a árvore B
-        // ignora duplicatas, então sortear com repetição reduziria o tamanho
-        // efetivo do conjunto e distorceria as métricas).
         for (long i = 0; i < N; ++i) keys[static_cast<size_t>(i)] = static_cast<int>(i + 1);
         std::mt19937 rng(seed);
         std::shuffle(keys.begin(), keys.end(), rng);
@@ -127,7 +104,7 @@ void writeHeaderIfNeeded(const std::string& csv) {
 void emit(const Args& a, const Row& r) {
     double avg = (a.N > 0) ? static_cast<double>(r.accesses) / static_cast<double>(a.N) : 0.0;
     double ioWait = r.wall_ms - (r.user_ms + r.sys_ms);
-    if (ioWait < 0) ioWait = 0;  // ruído de relógio
+    if (ioWait < 0) ioWait = 0;
     std::ostringstream line;
     line.setf(std::ios::fixed); line.precision(4);
     line << r.label << ',' << r.m << ',' << r.N << ',' << r.mode << ','
@@ -141,7 +118,6 @@ void emit(const Args& a, const Row& r) {
         std::ofstream os(a.csv, std::ios::app);
         os << line.str() << "\n";
     }
-    // Eco curto no stderr para acompanhamento ao vivo.
     std::cerr << "[bench] m=" << r.m << " N=" << r.N << " " << r.mode
               << " reuse=" << r.reuse << " " << r.phase
               << " : io=" << r.accesses << " (" << avg << "/op) wall="
@@ -150,13 +126,13 @@ void emit(const Args& a, const Row& r) {
               << " size=" << r.fileBytes << "B\n";
 }
 
-} // namespace
+}
 
 int main(int argc, char** argv) {
     Args a = parseArgs(argc, argv);
     if (!a.csv.empty()) writeHeaderIfNeeded(a.csv);
 
-    std::remove(a.file.c_str());  // sempre começa com arquivo limpo
+    std::remove(a.file.c_str());
 
     DiskManager dm(a.file);
     dm.setReuse(a.reuse);
@@ -177,7 +153,6 @@ int main(int argc, char** argv) {
         r.fileBytes = static_cast<long long>(dm.fileSizeBytes());
     };
 
-    // ---------------- INSERÇÃO ----------------
     if (a.op == "insert" || a.op == "full") {
         dm.resetCounter();
         auto c0 = cpuNow(); auto t0 = clock::now();
@@ -201,9 +176,8 @@ int main(int argc, char** argv) {
         if (!a.dotPrefix.empty()) bt.exportDot(a.dotPrefix + "_final.dot");
     }
 
-    // ---------------- BUSCA ----------------
     if (a.op == "search" || a.op == "full") {
-        if (a.op == "search") for (int k : keys) bt.insertB(k);  // precisa popular
+        if (a.op == "search") for (int k : keys) bt.insertB(k);
         dm.resetCounter();
         auto c0 = cpuNow(); auto t0 = clock::now();
         volatile bool sink = false;
@@ -218,9 +192,8 @@ int main(int argc, char** argv) {
         emit(a, r);
     }
 
-    // ---------------- REMOÇÃO ----------------
     if (a.op == "delete" || a.op == "full") {
-        if (a.op == "delete") for (int k : keys) bt.insertB(k);  // precisa popular
+        if (a.op == "delete") for (int k : keys) bt.insertB(k);
         std::vector<int> order = keys;
         std::shuffle(order.begin(), order.end(), std::mt19937(a.seed + 7));
         dm.resetCounter();
@@ -236,21 +209,14 @@ int main(int argc, char** argv) {
         emit(a, r);
     }
 
-    // ---------------- CHURN (ocupação do arquivo / reaproveitamento) --------
-    // build N -> delete metade -> reinsere metade de chaves novas.
-    // Com reuso ligado, a reinserção consome a free list (arquivo não cresce).
-    // Com reuso desligado, allocNode acrescenta sempre ao fim (arquivo incha).
     if (a.op == "churn") {
-        // build
         for (int k : keys) bt.insertB(k);
         { Row r; r.phase = "churn_build"; fillRow(r); r.accesses = 0; emit(a, r); }
 
-        // delete metade (índices pares)
         long half = a.N / 2;
         for (long i = 0; i < a.N; i += 2) bt.deleteB(keys[static_cast<size_t>(i)]);
         { Row r; r.phase = "churn_after_delete"; fillRow(r); r.accesses = 0; emit(a, r); }
 
-        // reinsere `half` chaves novas (valores > N, garantidamente inéditos)
         dm.resetCounter();
         auto c0 = cpuNow(); auto t0 = clock::now();
         for (long i = 0; i < half; ++i) bt.insertB(static_cast<int>(a.N + 1 + i));
@@ -264,6 +230,6 @@ int main(int argc, char** argv) {
         emit(a, r);
     }
 
-    std::remove(a.file.c_str());  // limpa o arquivo temporário
+    std::remove(a.file.c_str());
     return 0;
 }

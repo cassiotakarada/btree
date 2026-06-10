@@ -1,12 +1,3 @@
-// Teste de stress / regressão para a B-tree.
-// Constrói árvores aleatórias, remove em ordem aleatória, e em cada passo
-// valida 5 invariantes da estrutura. Não usa o menu interativo: chama
-// BTree direto.
-//
-// Como rodar:
-//   make tests && ./tests/stress_btree
-//
-// Em qualquer falha: imprime o estado completo, o cenário (seed, N) e aborta.
 #include <iostream>
 #include <random>
 #include <vector>
@@ -21,8 +12,8 @@ namespace {
 
 struct Validator {
     DiskManager& dm;
-    std::set<int> seenRRN;       // detecta ciclo / aliasing
-    std::set<int> seenKey;       // detecta duplicata
+    std::set<int> seenRRN;
+    std::set<int> seenKey;
     int           leafDepth = -1;
 
     explicit Validator(DiskManager& d) : dm(d) {}
@@ -34,7 +25,6 @@ struct Validator {
         std::exit(1);
     }
 
-    // Recursivo: valida cada nó e propaga (lo, hi) com a faixa permitida.
     int walk(int rrn, int lo, int hi, int depth) {
         if (rrn == 0) return depth;
 
@@ -69,7 +59,6 @@ struct Validator {
             return depth;
         }
 
-        // Não-folha: cada A[i] deve ser != 0 para i in 0..n
         for (int i = 0; i <= node.n; ++i) {
             if (node.A[i] == 0)
                 fail("nó interno com filho ausente", rrn);
@@ -83,7 +72,6 @@ struct Validator {
         return leafDepth;
     }
 
-    // Validação completa + comparação com `expected` (conjunto canônico).
     void validate(const std::set<int>& expected, const std::string& tag) {
         seenRRN.clear();
         seenKey.clear();
@@ -96,7 +84,6 @@ struct Validator {
             std::cerr << "INVARIANTE VIOLADA: conjunto de chaves divergente em " << tag << "\n"
                       << "  esperado: " << expected.size() << " chaves\n"
                       << "  na árvore: " << seenKey.size() << " chaves\n";
-            // diferenças
             std::set<int> faltam, sobram;
             std::set_difference(expected.begin(), expected.end(),
                                 seenKey.begin(),  seenKey.end(),
@@ -122,8 +109,6 @@ void runScenario(const std::string& binPath, unsigned seed, int N, bool verbose)
     std::mt19937 rng(seed);
     std::uniform_int_distribution<int> dist(1, 10 * N);
 
-    // Gera N chaves *únicas* (usa set pra evitar duplicatas; insertB já trata,
-    // mas pra simplificar a validação manter o conjunto canônico mais limpo).
     std::set<int> expected;
     std::vector<int> order;
     while ((int)expected.size() < N) {
@@ -138,7 +123,6 @@ void runScenario(const std::string& binPath, unsigned seed, int N, bool verbose)
     for (int k : order) {
         bt.insertB(k);
         ++inserted;
-        // valida só periodicamente pra não explodir o tempo
         if (inserted == N || inserted % std::max(1, N / 10) == 0) {
             std::set<int> sofar(order.begin(), order.begin() + inserted);
             v.validate(sofar, "após inserir " + std::to_string(inserted));
@@ -151,7 +135,6 @@ void runScenario(const std::string& binPath, unsigned seed, int N, bool verbose)
                   << ", total nós alocados = " << h.total << "\n";
     }
 
-    // Remove em ordem embaralhada
     std::vector<int> delOrder = order;
     std::shuffle(delOrder.begin(), delOrder.end(), std::mt19937(seed ^ 0xDEADBEEF));
 
@@ -177,14 +160,14 @@ void runScenario(const std::string& binPath, unsigned seed, int N, bool verbose)
     if (verbose) std::cout << "  OK ✓\n";
 }
 
-}  // namespace
+}
 
 int main() {
     struct Case { unsigned seed; int N; };
     std::vector<Case> cases = {
         {1,    20},
         {2,    50},
-        {7,    21},     // o caso histórico
+        {7,    21},
         {42,   200},
         {100,  500},
         {2026, 1000},
