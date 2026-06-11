@@ -108,24 +108,37 @@ def chart_reuse():
 def chart_machines():
     import numpy as np
 
-    def total_by_m(rows):
+    def total_by_m(rows, metric):
         tot = defaultdict(float)
         for r in rows:
             if r["mode"] == "rand" and r["phase"] in ("insert", "search", "delete"):
-                tot[r["m"]] += r["wall_ms"]
+                tot[r["m"]] += metric(r)
         return tot
-    lap, tit = total_by_m(ORDER_LAP), total_by_m(ORDER)
-    ms = sorted(set(lap) & set(tit))
-    if not ms:
+
+    panels = [
+        ("Wall time (relógio)", lambda r: r["wall_ms"]),
+        ("Tempo de CPU (user+sys)", lambda r: r["cpu_user_ms"] + r["cpu_sys_ms"]),
+    ]
+    fig, axes = plt.subplots(1, 2, figsize=FIG, dpi=DPI, sharey=True)
+    drew = False
+    for ax, (title, metric) in zip(axes, panels):
+        lap, tit = total_by_m(ORDER_LAP, metric), total_by_m(ORDER, metric)
+        ms = sorted(set(lap) & set(tit))
+        if not ms:
+            continue
+        drew = True
+        x = np.arange(len(ms)); w = 0.38
+        ax.bar(x - w/2, [lap[m]/1000 for m in ms], w, label="Notebook", color=ACCENT)
+        ax.bar(x + w/2, [tit[m]/1000 for m in ms], w, label="Titan (USP)", color="#7c3aed")
+        ax.set_xticks(x); ax.set_xticklabels([str(m) for m in ms], fontsize=8)
+        ax.set_xlabel("ordem m"); ax.set_title(title, fontsize=11)
+        ax.grid(True, axis="y", alpha=0.3)
+    if not drew:
+        plt.close(fig)
         return None
-    x = np.arange(len(ms)); w = 0.38
-    fig, ax = plt.subplots(figsize=FIG, dpi=DPI)
-    ax.bar(x - w/2, [lap[m]/1000 for m in ms], w, label="Notebook", color=ACCENT)
-    ax.bar(x + w/2, [tit[m]/1000 for m in ms], w, label="Titan (USP)", color="#7c3aed")
-    ax.set_xticks(x); ax.set_xticklabels([str(m) for m in ms], fontsize=9)
-    ax.set_xlabel("ordem m"); ax.set_ylabel("tempo total ins+busca+rem (s)")
-    ax.set_title("Tempo por máquina (N=100k, aleatório) — acessos a disco idênticos")
-    ax.grid(True, axis="y", alpha=0.3); ax.legend(fontsize=11)
+    axes[0].set_ylabel("tempo total ins+busca+rem (s)")
+    axes[0].legend(fontsize=10)
+    fig.suptitle("Tempo por máquina (N=100k, aleatório) — acessos a disco idênticos", fontsize=12)
     return _save(fig, "chart_machines.png")
 
 print("gerando gráficos...")
@@ -279,7 +292,7 @@ SLIDES = [
         "bullets": [
             "Execução em duas máquinas: Notebook x Titan (USP).",
             "Acessos a disco IDÊNTICOS nas duas — resultado determinístico, independente do hardware.",
-            "Apenas o tempo de execução varia (CPU, disco e carga da máquina).",
+            "Apenas o tempo varia: wall time (inclui espera de I/O e carga) e tempo de CPU (user+sys, só o trabalho do processo).",
             "Comparação automatizada via compare.py a partir dos CSVs de cada máquina.",
         ],
         "images": [(C_MACH, None)] if C_MACH else [],
