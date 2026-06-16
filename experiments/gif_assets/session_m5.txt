@@ -1,0 +1,209 @@
+
+=== B-Tree (ordem 5) ===
+1. Inserir chave
+2. Buscar chave
+3. Remover chave
+4. Acessos ao disco e tempo de execução
+5. Outras opções
+0. Sair
+> Chave: Inserido no RRN 1 (posição 1).
+Tempo: 0.011 ms
+
+=== B-Tree (ordem 5) ===
+1. Inserir chave
+2. Buscar chave
+3. Remover chave
+4. Acessos ao disco e tempo de execução
+5. Outras opções
+0. Sair
+> Chave: Inserido no RRN 1 (posição 2).
+Tempo: 0.004 ms
+
+=== B-Tree (ordem 5) ===
+1. Inserir chave
+2. Buscar chave
+3. Remover chave
+4. Acessos ao disco e tempo de execução
+5. Outras opções
+0. Sair
+> Chave: Inserido no RRN 1 (posição 3).
+Tempo: 0.004 ms
+
+=== B-Tree (ordem 5) ===
+1. Inserir chave
+2. Buscar chave
+3. Remover chave
+4. Acessos ao disco e tempo de execução
+5. Outras opções
+0. Sair
+> Chave: Inserido no RRN 1 (posição 4).
+Tempo: 0.004 ms
+
+=== B-Tree (ordem 5) ===
+1. Inserir chave
+2. Buscar chave
+3. Remover chave
+4. Acessos ao disco e tempo de execução
+5. Outras opções
+0. Sair
+> Chave: Inserido no RRN 2 (posição 2).
+Tempo: 0.009 ms
+
+=== B-Tree (ordem 5) ===
+1. Inserir chave
+2. Buscar chave
+3. Remover chave
+4. Acessos ao disco e tempo de execução
+5. Outras opções
+0. Sair
+> Chave: Inserido no RRN 2 (posição 3).
+Tempo: 0.005 ms
+
+=== B-Tree (ordem 5) ===
+1. Inserir chave
+2. Buscar chave
+3. Remover chave
+4. Acessos ao disco e tempo de execução
+5. Outras opções
+0. Sair
+> Chave: Inserido no RRN 2 (posição 4).
+Tempo: 0.005 ms
+
+=== B-Tree (ordem 5) ===
+1. Inserir chave
+2. Buscar chave
+3. Remover chave
+4. Acessos ao disco e tempo de execução
+5. Outras opções
+0. Sair
+> Chave: Inserido no RRN 4 (posição 2).
+Tempo: 0.008 ms
+
+=== B-Tree (ordem 5) ===
+1. Inserir chave
+2. Buscar chave
+3. Remover chave
+4. Acessos ao disco e tempo de execução
+5. Outras opções
+0. Sair
+> Chave: Inserido no RRN 4 (posição 3).
+Tempo: 0.005 ms
+
+=== B-Tree (ordem 5) ===
+1. Inserir chave
+2. Buscar chave
+3. Remover chave
+4. Acessos ao disco e tempo de execução
+5. Outras opções
+0. Sair
+> Chave: Inserido no RRN 4 (posição 4).
+Tempo: 0.005 ms
+
+=== B-Tree (ordem 5) ===
+1. Inserir chave
+2. Buscar chave
+3. Remover chave
+4. Acessos ao disco e tempo de execução
+5. Outras opções
+0. Sair
+> Chave: Inserido no RRN 1 (posição 3).
+Tempo: 0.005 ms
+
+=== B-Tree (ordem 5) ===
+1. Inserir chave
+2. Buscar chave
+3. Remover chave
+4. Acessos ao disco e tempo de execução
+5. Outras opções
+0. Sair
+> Chave: Inserido no RRN 2 (posição 3).
+Tempo: 0.005 ms
+
+=== B-Tree (ordem 5) ===
+1. Inserir chave
+2. Buscar chave
+3. Remover chave
+4. Acessos ao disco e tempo de execução
+5. Outras opções
+0. Sair
+> Chave: Inserido no RRN 3 (posição 3).
+Tempo: 0.008 ms
+
+=== B-Tree (ordem 5) ===
+1. Inserir chave
+2. Buscar chave
+3. Remover chave
+4. Acessos ao disco e tempo de execução
+5. Outras opções
+0. Sair
+> Chave: Encontrado no RRN 2 posição 3.
+Tempo: 0.001 ms
+
+=== B-Tree (ordem 5) ===
+1. Inserir chave
+2. Buscar chave
+3. Remover chave
+4. Acessos ao disco e tempo de execução
+5. Outras opções
+0. Sair
+> Chave: Removido do RRN 2 (posição 1).
+Tempo: 0.005 ms
+
+=== B-Tree (ordem 5) ===
+1. Inserir chave
+2. Buscar chave
+3. Remover chave
+4. Acessos ao disco e tempo de execução
+5. Outras opções
+0. Sair
+> Acessos ao disco: 102
+Tempo de execução acumulado: 0.083 ms
+
+=== B-Tree (ordem 5) ===
+1. Inserir chave
+2. Buscar chave
+3. Remover chave
+4. Acessos ao disco e tempo de execução
+5. Outras opções
+0. Sair
+> 
+--- Outras opções (B-Tree ordem 5) ---
+1. Imprimir árvore
+2. Zerar contador
+3. Gerar árvore aleatória (altura mínima)
+4. Experimento aleatório
+5. Exportar para Graphviz (.dot)
+0. Voltar ao menu principal
+> [RRN 3] (n=3) keys: 30 60 85
+    [RRN 1] (n=3) keys: 10 20 25
+    [RRN 2] (n=2) keys: 50 55
+    [RRN 4] (n=2) keys: 70 80
+    [RRN 5] (n=2) keys: 90 100
+Tempo: 0.005 ms
+
+--- Outras opções (B-Tree ordem 5) ---
+1. Imprimir árvore
+2. Zerar contador
+3. Gerar árvore aleatória (altura mínima)
+4. Experimento aleatório
+5. Exportar para Graphviz (.dot)
+0. Voltar ao menu principal
+> Gerado: tree.dot
+Gerado: tree.png
+
+--- Outras opções (B-Tree ordem 5) ---
+1. Imprimir árvore
+2. Zerar contador
+3. Gerar árvore aleatória (altura mínima)
+4. Experimento aleatório
+5. Exportar para Graphviz (.dot)
+0. Voltar ao menu principal
+> 
+=== B-Tree (ordem 5) ===
+1. Inserir chave
+2. Buscar chave
+3. Remover chave
+4. Acessos ao disco e tempo de execução
+5. Outras opções
+0. Sair
+> 

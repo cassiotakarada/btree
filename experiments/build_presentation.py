@@ -42,6 +42,9 @@ ORDER = load(os.path.join(ROOT, "results_order_m_impact", "data.csv"))
 SCALE = load(os.path.join(ROOT, "results_set_size_scaling", "data.csv"))
 REUSE = load(os.path.join(ROOT, "results_node_reuse", "data.csv"))
 ORDER_LAP = load(os.path.join(ROOT, "_baseline", "results_order_m_impact", "data.csv"))
+SCALE_LAP = load(os.path.join(ROOT, "_baseline", "results_set_size_scaling", "data.csv"))
+
+TITAN = "#7c3aed"  # cor do servidor Titan (USP)
 
 def by_phase(rows, phase, mode=None):
     return [r for r in rows if r["phase"] == phase and (not mode or r["mode"] == mode)]
@@ -141,7 +144,191 @@ def chart_machines():
     fig.suptitle("Tempo por máquina (N=100k, aleatório) — acessos a disco idênticos", fontsize=12)
     return _save(fig, "chart_machines.png")
 
+def chart_phase_io():
+    """Resultados SEPARADOS por operação: I/O médio de inserção/busca/remoção."""
+    import numpy as np
+    ms = [3, 8, 32, 100, 1000]
+    by = defaultdict(dict)
+    for r in ORDER:
+        if r["mode"] == "rand":
+            by[r["m"]][r["phase"]] = r
+    phases = [("insert", "inserção", ACCENT),
+              ("search", "busca", "#059669"),
+              ("delete", "remoção", ACCENT2)]
+    x = np.arange(len(ms)); w = 0.26
+    fig, ax = plt.subplots(figsize=FIG, dpi=DPI)
+    for i, (ph, lbl, col) in enumerate(phases):
+        ys = [by[m].get(ph, {}).get("avg_io_per_op", 0) for m in ms]
+        ax.bar(x + (i - 1) * w, ys, w, label=lbl, color=col)
+    ax.set_xticks(x); ax.set_xticklabels([str(m) for m in ms])
+    ax.set_xlabel("ordem m"); ax.set_ylabel("I/O médio por operação")
+    ax.set_title("Resultados por operação — I/O por op (N=100k, aleatório)")
+    ax.grid(True, axis="y", alpha=0.3); ax.legend(fontsize=11)
+    return _save(fig, "chart_phase_io.png")
+
+
+def _total_wall_by_m(rows):
+    tot = defaultdict(float)
+    for r in rows:
+        if r["mode"] == "rand" and r["phase"] in ("insert", "search", "delete"):
+            tot[r["m"]] += r["wall_ms"]
+    return tot
+
+
+def chart_wall_machines():
+    """Comparação dos 2 sistemas: tempo de parede total vs ordem m."""
+    nb, ti = _total_wall_by_m(ORDER), _total_wall_by_m(ORDER_LAP)
+    ms = sorted(set(nb) & set(ti))
+    fig, ax = plt.subplots(figsize=FIG, dpi=DPI)
+    ax.plot(ms, [nb[m] for m in ms], "o-", color=ACCENT, lw=2.4, ms=6, label="Notebook")
+    ax.plot(ms, [ti[m] for m in ms], "s-", color=TITAN, lw=2.4, ms=6, label="Titan (USP)")
+    ax.set_xscale("log"); ax.set_xlabel("ordem m (escala log)")
+    ax.set_ylabel("tempo total ins+busca+rem (ms)")
+    ax.set_title("Dois sistemas — wall time vs m (N=100k, aleatório)")
+    ax.grid(True, alpha=0.3); ax.legend(fontsize=11)
+    return _save(fig, "chart_wall_machines.png")
+
+
+def chart_cpu_split():
+    """Comparação dos 2 sistemas: CPU de usuário vs CPU de sistema (I/O)."""
+    import numpy as np
+    ms = [3, 100, 1000]
+
+    def split(rows):
+        u = defaultdict(float); s = defaultdict(float)
+        for r in rows:
+            if r["mode"] == "rand" and r["phase"] in ("insert", "search", "delete"):
+                u[r["m"]] += r["cpu_user_ms"]; s[r["m"]] += r["cpu_sys_ms"]
+        return u, s
+
+    nu, ns = split(ORDER); tu, ts = split(ORDER_LAP)
+    x = np.arange(len(ms)); w = 0.36
+    fig, ax = plt.subplots(figsize=FIG, dpi=DPI)
+    ax.bar(x - w/2, [nu[m]/1000 for m in ms], w, color=ACCENT, label="Notebook · CPU usuário")
+    ax.bar(x - w/2, [ns[m]/1000 for m in ms], w, bottom=[nu[m]/1000 for m in ms],
+           color="#93c5fd", label="Notebook · CPU sistema (I/O)")
+    ax.bar(x + w/2, [tu[m]/1000 for m in ms], w, color=TITAN, label="Titan · CPU usuário")
+    ax.bar(x + w/2, [ts[m]/1000 for m in ms], w, bottom=[tu[m]/1000 for m in ms],
+           color="#c4b5fd", label="Titan · CPU sistema (I/O)")
+    ax.set_xticks(x); ax.set_xticklabels([f"m={m}" for m in ms])
+    ax.set_ylabel("tempo de CPU total (s)")
+    ax.set_title("Dois sistemas — CPU usuário vs sistema (N=100k)")
+    ax.grid(True, axis="y", alpha=0.3); ax.legend(fontsize=8.5)
+    return _save(fig, "chart_cpu_split.png")
+
+
+def chart_determinism():
+    """Prova de determinismo: acessos a disco idênticos nas 2 máquinas."""
+    nb = {(r["m"], r["phase"]): r["disk_accesses"]
+          for r in ORDER if r["mode"] == "rand"}
+    ti = {(r["m"], r["phase"]): r["disk_accesses"]
+          for r in ORDER_LAP if r["mode"] == "rand"}
+    keys = sorted(set(nb) & set(ti))
+    xs = [nb[k] for k in keys]; ys = [ti[k] for k in keys]
+    fig, ax = plt.subplots(figsize=FIG, dpi=DPI)
+    lim = max(xs + ys) * 1.05
+    ax.plot([0, lim], [0, lim], "--", color=MUTED, lw=1.5, label="y = x (idêntico)")
+    ax.scatter(xs, ys, s=55, color=ACCENT2, zorder=3, edgecolor="white")
+    ax.set_xlim(0, lim); ax.set_ylim(0, lim)
+    ax.set_xlabel("acessos a disco — Notebook")
+    ax.set_ylabel("acessos a disco — Titan (USP)")
+    ax.set_title("Determinismo: acessos a disco IDÊNTICOS nas 2 máquinas")
+    ax.grid(True, alpha=0.3); ax.legend(fontsize=11)
+    return _save(fig, "chart_determinism.png")
+
+
+def chart_scale_machines():
+    """Comparação dos 2 sistemas: escala do conjunto (wall vs N, m=100)."""
+    def pts(rows):
+        d = {}
+        for r in rows:
+            if r["m"] == 100 and r["mode"] == "rand" and r["phase"] == "search":
+                d[r["N"]] = r["wall_ms"]
+        return sorted(d.items())
+    nb, ti = pts(SCALE), pts(SCALE_LAP)
+    fig, ax = plt.subplots(figsize=FIG, dpi=DPI)
+    if nb:
+        ax.plot(*zip(*nb), "o-", color=ACCENT, lw=2.4, ms=6, label="Notebook")
+    if ti:
+        ax.plot(*zip(*ti), "s-", color=TITAN, lw=2.4, ms=6, label="Titan (USP)")
+    ax.set_xscale("log"); ax.set_yscale("log")
+    ax.set_xlabel("N — nº de chaves (escala log)")
+    ax.set_ylabel("tempo de busca total (ms, escala log)")
+    ax.set_title("Dois sistemas — escala do conjunto (m=100, busca)")
+    ax.grid(True, alpha=0.3, which="both"); ax.legend(fontsize=11)
+    return _save(fig, "chart_scale_machines.png")
+
+
+def chart_node_anatomy():
+    """Diagrama: como um nó da Árvore B é organizado (campos n, A[], K[])."""
+    from matplotlib.patches import Rectangle
+    fig, ax = plt.subplots(figsize=(9.0, 3.4), dpi=DPI)
+    ax.set_xlim(0, 13); ax.set_ylim(0, 5); ax.axis("off")
+    cells = [("n=3", INK, "#e0e7ff"),
+             ("A0", ACCENT, "#dbeafe"), ("30", ACCENT2, "#fee2e2"),
+             ("A1", ACCENT, "#dbeafe"), ("60", ACCENT2, "#fee2e2"),
+             ("A2", ACCENT, "#dbeafe"), ("85", ACCENT2, "#fee2e2"),
+             ("A3", ACCENT, "#dbeafe"), ("·", MUTED, "#f3f4f6"),
+             ("A4", ACCENT, "#dbeafe")]
+    x = 1.0; w = 1.1
+    for txt, fg, bg in cells:
+        ax.add_patch(Rectangle((x, 2.6), w, 1.2, facecolor=bg, edgecolor=INK, lw=1.3))
+        ax.text(x + w/2, 3.2, txt, ha="center", va="center", color=fg,
+                fontsize=12, fontweight="bold")
+        x += w
+    ax.text(1.0 + w/2, 4.1, "n", ha="center", color=INK, fontsize=10)
+    ax.annotate("ponteiros A[ ] — RRN dos filhos no disco",
+                xy=(3.2, 2.55), xytext=(3.2, 1.4), ha="center", color=ACCENT,
+                fontsize=11, arrowprops=dict(arrowstyle="->", color=ACCENT))
+    ax.annotate("chaves K[ ] — os valores armazenados",
+                xy=(5.4, 3.85), xytext=(7.5, 4.6), ha="center", color=ACCENT2,
+                fontsize=11, arrowprops=dict(arrowstyle="->", color=ACCENT2))
+    ax.text(6.5, 0.5, "Registro de tamanho fixo: 1 inteiro (n) + m ponteiros + m chaves "
+            "= PAGE_SIZE bytes  →  1 nó = 1 acesso ao disco",
+            ha="center", color=MUTED, fontsize=10.5)
+    ax.set_title("Anatomia de um nó (exemplo de ordem m=5: até 4 chaves, 5 filhos)",
+                 fontsize=12)
+    return _save(fig, "chart_node_anatomy.png")
+
+
+def chart_file_layout():
+    """Diagrama: o arquivo no disco como um vetor de registros de tamanho fixo."""
+    from matplotlib.patches import Rectangle, FancyArrowPatch
+    fig, ax = plt.subplots(figsize=(9.0, 3.4), dpi=DPI)
+    ax.set_xlim(0, 13); ax.set_ylim(0, 5); ax.axis("off")
+    recs = [("RRN 0\nHEADER\nroot·total·free_head", "#ede9fe", TITAN),
+            ("RRN 1\nnó", "#dbeafe", ACCENT),
+            ("RRN 2\nnó", "#dbeafe", ACCENT),
+            ("RRN 3\nnó LIVRE", "#fee2e2", ACCENT2),
+            ("RRN 4\nnó", "#dbeafe", ACCENT),
+            ("…", "#f3f4f6", MUTED)]
+    x = 0.6; w = 2.0
+    centers = []
+    for txt, bg, fg in recs:
+        ax.add_patch(Rectangle((x, 2.2), w, 1.7, facecolor=bg, edgecolor=INK, lw=1.3))
+        ax.text(x + w/2, 3.05, txt, ha="center", va="center", color=fg,
+                fontsize=10.5, fontweight="bold")
+        centers.append(x + w/2); x += w + 0.05
+    ax.text(6.4, 1.4, "posição no arquivo:  offset(rrn) = rrn × PAGE_SIZE  "
+            "(acesso direto, sem varrer nada)", ha="center", color=MUTED, fontsize=10.5)
+    ax.add_patch(FancyArrowPatch((centers[0], 2.15), (centers[3], 2.15),
+                 connectionstyle="arc3,rad=-0.35", arrowstyle="->",
+                 color=ACCENT2, lw=1.6))
+    ax.text((centers[0]+centers[3])/2, 0.7, "free_head → lista de nós livres "
+            "(reaproveitamento)", ha="center", color=ACCENT2, fontsize=10)
+    ax.set_title("Layout do arquivo: um vetor de registros de tamanho fixo",
+                 fontsize=12)
+    return _save(fig, "chart_file_layout.png")
+
+
 print("gerando gráficos...")
+C_NODE = chart_node_anatomy()
+C_FILE = chart_file_layout()
+C_PHASE = chart_phase_io()
+C_WALL_M = chart_wall_machines()
+C_CPU = chart_cpu_split()
+C_DET = chart_determinism()
+C_SCALE_M = chart_scale_machines()
 C_IO_M = chart_io_vs_m()
 C_H_M = chart_height_vs_m()
 C_IO_N = chart_io_vs_N()
@@ -179,8 +366,32 @@ def reuse_table():
                          f'{on["file_bytes"]/1024:,.0f}', f"{save:.0f}%"])
     return headers, rows
 
+def machines_table():
+    """Comparação lado a lado dos 2 sistemas (wall, CPU, acessos idênticos)."""
+    def agg(rows):
+        wall = defaultdict(float); cpu = defaultdict(float); acc = defaultdict(int)
+        for r in rows:
+            if r["mode"] == "rand" and r["phase"] in ("insert", "search", "delete"):
+                wall[r["m"]] += r["wall_ms"]
+                cpu[r["m"]] += r["cpu_user_ms"] + r["cpu_sys_ms"]
+                acc[r["m"]] += r["disk_accesses"]
+        return wall, cpu, acc
+    nw, nc, na = agg(ORDER); tw, tc, ta = agg(ORDER_LAP)
+    headers = ["m", "acessos disco", "Notebook wall", "Titan wall", "speedup"]
+    rows = []
+    for m in [3, 16, 100, 1000]:
+        if m in nw and m in tw and tw[m]:
+            speed = nw[m] / tw[m]
+            ident = "✓ iguais" if na[m] == ta[m] else "DIVERGE"
+            rows.append([str(m), f"{na[m]:,}".replace(",", "."),
+                         f"{nw[m]/1000:.2f} s", f"{tw[m]/1000:.2f} s",
+                         f"{speed:.2f}×"])
+    return headers, rows
+
+
 ORDER_HEADERS, ORDER_ROWS = order_table()
 REUSE_HEADERS, REUSE_ROWS = reuse_table()
+MACH_HEADERS, MACH_ROWS = machines_table()
 
 def G(name):
     return os.path.join(GRAPHS, name)
@@ -198,8 +409,85 @@ SLIDES = [
         ],
     },
     {
+        "layout": "two_col",
+        "title": "2. Roteiro da apresentação",
+        "left_title": "Parte 1 — a estrutura",
+        "left": [
+            "Contexto: por que disco e por que Árvore B.",
+            "Como um nó é organizado e como o arquivo é gravado.",
+            "Decisões de implementação (1 nó por I/O).",
+            "Os métodos: busca, inserção e remoção.",
+            "Demonstração ao vivo + grafos gerados.",
+        ],
+        "right_title": "Parte 2 — a avaliação",
+        "right": [
+            "Experimentos, métricas e metodologia.",
+            "Impacto da ordem m (I/O e altura).",
+            "Resultados por operação e por tamanho do conjunto.",
+            "Reaproveitamento de nós (espaço).",
+            "Validação em dois sistemas + discussão (union) e conclusões.",
+        ],
+    },
+    {
+        "layout": "bullets",
+        "title": "3. O problema e os objetivos",
+        "bullets": [
+            "Enunciado: implementar uma classe Árvore B de ordem m que resida em MEMÓRIA SECUNDÁRIA (um arquivo em disco).",
+            "Restrição central: a árvore é lida/transferida em blocos — carregada parcialmente, NUNCA inteira na RAM. Cada operação toca um nó por vez.",
+            "Operações exigidas: busca, inserção e remoção completas, mantendo a árvore balanceada.",
+            "Instrumentação pedida: contar acessos ao disco e permitir monitorar a estrutura (impressão, altura, grafo).",
+            "Nosso objetivo extra: avaliar empiricamente o efeito de m e do tamanho do conjunto, e validar os resultados em mais de uma máquina.",
+        ],
+    },
+    {
+        "layout": "bullets",
+        "title": "4. Contexto — memória rápida × disco lento",
+        "bullets": [
+            "A memória RAM é rapidíssima, mas é pequena e volátil (some quando desliga).",
+            "O disco é enorme e permanente, porém MILHARES de vezes mais lento que a RAM.",
+            "Num banco de dados, o gargalo quase sempre é o disco — não a CPU.",
+            "Por isso a regra do trabalho: a árvore mora no disco e nunca é carregada inteira; cada passo lê ou escreve só um pedaço (um nó).",
+            "Consequência: para ser rápido, o segredo é fazer o MENOR número de acessos ao disco possível.",
+        ],
+    },
+    {
+        "layout": "bullets",
+        "title": "5. Contexto — índice e a métrica honesta",
+        "bullets": [
+            "Um índice é o \"sumário\" que evita ler o arquivo inteiro: ele diz onde está cada registro.",
+            "A Árvore B é a estrutura de índice usada de fato por bancos de dados (MySQL, PostgreSQL) e por sistemas de arquivos.",
+            "A métrica que realmente importa NÃO é o relógio, e sim o NÚMERO DE ACESSOS AO DISCO — independe do hardware.",
+            "Por que o relógio engana: a escrita vai para o cache do sistema operacional, então o tempo medido varia com a máquina e a carga.",
+            "Toda a apresentação gira em torno de uma pergunta: como organizar o arquivo para responder buscas com o menor número de acessos?",
+        ],
+    },
+    {
+        "layout": "text_image",
+        "title": "6. Anatomia de um nó",
+        "bullets": [
+            "Cada nó é um registro de TAMANHO FIXO, gravado e lido de uma vez só.",
+            "Campos: n (quantas chaves o nó tem), o vetor de ponteiros A[ ] (os RRN dos filhos) e o vetor de chaves K[ ] (os valores).",
+            "Um nó de ordem m guarda até m-1 chaves e até m filhos — por isso m maior = mais chaves por nó.",
+            "PAGE_SIZE = 1 inteiro + m ponteiros + m chaves. Esse tamanho fixo é o que permite achar qualquer nó por cálculo direto.",
+            "Regra de ouro: ler ou escrever UM nó = UM acesso ao disco.",
+        ],
+        "images": [(C_NODE, None)],
+    },
+    {
+        "layout": "text_image",
+        "title": "7. Layout do arquivo no disco",
+        "bullets": [
+            "O arquivo é um VETOR de registros de tamanho fixo, numerados por RRN (Relative Record Number).",
+            "O registro 0 é o HEADER: guarda a raiz (root), o total de nós e a cabeça da lista de livres (free_head).",
+            "Para achar um nó: offset = RRN × PAGE_SIZE. Acesso direto, sem varrer o arquivo.",
+            "Nós removidos não somem: entram numa lista de livres encadeada no próprio arquivo, prontos para reuso.",
+            "Abrir o arquivo e já saber a raiz (no header) custa uma única leitura de metadado.",
+        ],
+        "images": [(C_FILE, None)],
+    },
+    {
         "layout": "image_full",
-        "title": "2. Decisões de implementação",
+        "title": "8. Decisões de implementação",
         "bullets": [
             "Ordem m é constante simbólica de compilação (M): estrutura totalmente parametrizada.",
             "Raiz da árvore: armazenada no header (registro 0) do arquivo — campo root.",
@@ -211,20 +499,76 @@ SLIDES = [
     },
     {
         "layout": "bullets",
-        "title": "3. Métodos implementados",
+        "title": "9. O DiskManager — um nó por I/O",
         "bullets": [
-            "mSearch / mSearchPath - busca m-way da raiz à folha; retorna (RRN, índice, achou).",
-            "insertB - inserção bottom-up com propagação de split (Equação 1).",
-            "deleteB - remoção com sucessor in-order, redistribuição (empréstimo) e fusão (merge).",
+            "Toda a conversa com o disco passa por uma única classe: o DiskManager.",
+            "readNode(rrn) / writeNode(rrn): leem e escrevem exatamente UM registro de PAGE_SIZE — nunca mais que isso.",
+            "É aqui que mora o CONTADOR DE ACESSOS: cada readNode/writeNode soma 1. Essa é a métrica central da avaliação.",
+            "readHeader / writeHeader: acessam o registro 0 (raiz, total, free_head).",
+            "Garantia de projeto: a árvore nunca é carregada inteira — a lógica da B-tree só enxerga o disco por meio do DiskManager.",
+        ],
+    },
+    {
+        "layout": "bullets",
+        "title": "10. Reaproveitamento — a lista de livres",
+        "bullets": [
+            "Quando uma remoção libera um nó, ele não é descartado: vira um nó LIVRE.",
+            "freeNode(rrn): marca o nó com n = -1 e o encadeia na lista de livres, cuja cabeça (free_head) fica no header.",
+            "allocNode(): antes de crescer o arquivo, pega o primeiro nó da lista de livres (pilha LIFO) — só estende o arquivo se não houver livres.",
+            "Resultado: o arquivo reaproveita espaço em vez de inchar a cada remoção+inserção.",
+            "É um comportamento ligável (setReuse) — usamos isso para medir o ganho no experimento de churn.",
+        ],
+    },
+    {
+        "layout": "bullets",
+        "title": "11. Métodos — visão geral",
+        "bullets": [
+            "Três operações principais, todas operando em disco: busca, inserção e remoção.",
+            "mSearch / mSearchPath — busca m-way da raiz à folha; retorna (RRN, índice, achou).",
+            "insertB — inserção bottom-up com propagação de split.",
+            "deleteB — remoção com sucessor in-order, redistribuição (empréstimo) e fusão (merge).",
             "Auxiliares: splitNode, insertInNode, removeFromNode, findSuccessorLeaf.",
-            "Monitoramento: printTree (hierárquico), height, exportDot (Graphviz).",
-            "DiskManager: readNode, writeNode, allocNode, freeNode, contador de acessos, setReuse.",
-            "bench - driver experimental não interativo (CSV de métricas).",
+            "Monitoramento: printTree (hierárquico), height, exportDot (Graphviz) e o contador de acessos.",
+            "Nos próximos slides, cada operação em detalhe.",
+        ],
+    },
+    {
+        "layout": "text_image",
+        "title": "12. Busca m-way",
+        "bullets": [
+            "Em cada nó, as chaves dividem o universo em FAIXAS — como um dicionário que diz 'entre tal e tal palavra'.",
+            "Comparamos a chave buscada com as chaves do nó e descemos pelo ponteiro da faixa certa.",
+            "Repetimos nó a nó até achar a chave ou chegar a uma folha sem ela.",
+            "Custo: aproximadamente a ALTURA da árvore em acessos ao disco — pouquíssimos, porque a árvore é rasa.",
+            "No grafo: buscar 70 desce da raiz (40, 60) para o filho da direita — 2 acessos.",
+        ],
+        "images": [(G("m3_final.png"), "Árvore B de ordem 3 — a busca segue um caminho da raiz à folha")],
+    },
+    {
+        "layout": "bullets",
+        "title": "13. Inserção e split",
+        "bullets": [
+            "A inserção é bottom-up: primeiro a busca encontra a FOLHA correta, depois inserimos a chave em ordem.",
+            "Se o nó couber, acabou. Se ESTOURAR (passa de m-1 chaves), fazemos o split.",
+            "Split: o nó cheio é dividido em dois e a chave do MEIO (mediana) SOBE para o nó pai.",
+            "Se o pai também estourar, o split se propaga para cima — e pode até criar uma nova raiz, aumentando a altura.",
+            "É exatamente esse mecanismo que mantém a árvore sempre BALANCEADA, sem precisar reorganizar tudo.",
+        ],
+    },
+    {
+        "layout": "bullets",
+        "title": "14. Remoção — sucessor, redistribuição e fusão",
+        "bullets": [
+            "É a operação mais delicada. Se a chave está num nó INTERNO, trocamos pelo seu sucessor in-order (a menor chave à direita), reduzindo o caso ao de uma folha.",
+            "Ao remover de uma folha, o nó pode ficar ABAIXO DO MÍNIMO de chaves (underflow).",
+            "Reparo 1 — redistribuição: se um irmão tem chaves sobrando, pegamos uma emprestada (passando pelo pai).",
+            "Reparo 2 — fusão: se nenhum irmão pode emprestar, fundimos o nó com um irmão e puxamos uma chave do pai.",
+            "A fusão pode propagar o underflow para cima — no limite, a raiz encolhe e a árvore fica mais baixa.",
         ],
     },
     {
         "layout": "two_col",
-        "title": "Resumo — tudo que o código faz (núcleo + extras)",
+        "title": "15. Resumo — tudo que o código faz",
         "left_title": "Núcleo — Árvore B em disco",
         "left": [
             "Árvore B de ordem m parametrizável (M em tempo de compilação).",
@@ -247,8 +591,32 @@ SLIDES = [
         ],
     },
     {
+        "layout": "demo",
+        "title": "16. Demonstração — o programa rodando",
+        "bullets": [
+            "Animação real: do `make M=3` (compilação) até cada item do menu da main.",
+            "Inserir · Buscar · Remover · ver Acessos ao disco · Imprimir árvore · Exportar grafo.",
+            "Repetimos com m=5: nós comportam mais chaves, a árvore fica mais rasa.",
+            "Tudo capturado da execução de verdade — sem montagem.",
+        ],
+        "gif": os.path.join(ASSETS, "demo_btree.gif"),
+        "poster": os.path.join(ASSETS, "demo_poster.png"),
+        "caption": "make M=3/M=5 → menu interativo → grafo exportado pelo próprio programa",
+    },
+    {
+        "layout": "image_full",
+        "title": "17. Grafos gerados pelo programa",
+        "bullets": [
+            "O programa exporta a árvore para Graphviz (exportDot) e gera a imagem do grafo.",
+            "Cada caixa é um nó GRAVADO NO DISCO — o número é o RRN (a posição do registro no arquivo).",
+            "m=3: no máximo 2 chaves por nó → mais níveis. m=5: até 4 chaves por nó → árvore mais rasa, menos acessos.",
+        ],
+        "images": [(os.path.join(ASSETS, "graphs_m3_m5.png"),
+                    "Mesma sequência de chaves, duas ordens m — à direita a árvore é mais rasa")],
+    },
+    {
         "layout": "text_image",
-        "title": "4. Análises efetuadas (experimentos)",
+        "title": "18. Os experimentos — a matriz de testes",
         "bullets": [
             "Exp. 1 - Impacto da ordem m: m em {3,4,5,8,16,32,64,100,128,256,512,1000}, N=10^5.",
             "Exp. 2 - Escala do conjunto: N em {10^3,10^4,10^5,10^6}, m em {3,100,1000}.",
@@ -260,8 +628,20 @@ SLIDES = [
         "images": [(C_IO_N, None)],
     },
     {
+        "layout": "bullets",
+        "title": "19. Metodologia e ambiente",
+        "bullets": [
+            "Driver não interativo (bench): roda inserção → busca → remoção e emite um CSV com todas as métricas.",
+            "Cada configuração é reconstruída do zero (arquivo novo), garantindo medições independentes.",
+            "Dois modos de carga: ALEATÓRIO (chaves embaralhadas) e SEQUENCIAL (em ordem) — estressam a árvore de formas diferentes.",
+            "Tempo medido com getrusage: separa CPU de usuário, CPU de sistema (syscalls de I/O) e espera de I/O.",
+            "Duas máquinas: meu Notebook e o servidor Titan (USP). Automação por run_all.sh + scripts Python.",
+            "Métrica de referência sempre o contador de acessos — determinístico e comparável entre máquinas.",
+        ],
+    },
+    {
         "layout": "text_image",
-        "title": "5. Métricas utilizadas",
+        "title": "20. Métricas utilizadas",
         "bullets": [
             "Acessos ao disco - contador readNode+writeNode; total e média/op (métrica honesta de I/O).",
             "Altura da árvore - nº de níveis (~ log_m N).",
@@ -274,21 +654,76 @@ SLIDES = [
     },
     {
         "layout": "table_image",
-        "title": "6. Tabela de Resultados - impacto de m (N=10^5, aleatório)",
+        "title": "21. Impacto da ordem m — I/O por busca (N=10^5)",
         "table": (ORDER_HEADERS, ORDER_ROWS),
         "images": [(C_IO_M, None)],
         "footnote": "I/O por busca cai de 13,25 (m=3, altura 14) para 2,00 (m>=512, altura 2). Ganho satura por volta de m~64-128.",
     },
     {
+        "layout": "text_image",
+        "title": "22. Impacto da ordem m — altura da árvore",
+        "bullets": [
+            "A altura é o número de níveis — e quase iguala o número de acessos por busca.",
+            "Com m=3, a árvore tem 14 níveis para 100 mil chaves. É muito 'fundo' para uma estrutura de disco.",
+            "Aumentando m, a altura DESPENCA em degraus: poucos níveis bastam, porque cada nó comporta muito mais chaves.",
+            "A partir de m grande, a altura chega a 2 — não dá para ficar mais raso.",
+            "Altura baixa = poucos acessos = a razão de existir da Árvore B.",
+        ],
+        "images": [(C_H_M, None)],
+    },
+    {
+        "layout": "text_image",
+        "title": "23. Resultados separados por operação",
+        "bullets": [
+            "Mesmo experimento, agora separando inserção, busca e remoção.",
+            "A BUSCA é a mais barata: desce direto da raiz à folha (~altura acessos).",
+            "INSERÇÃO custa um pouco mais: além de descer, pode reescrever nós no caminho (split).",
+            "REMOÇÃO é a mais cara: pode ler irmãos para redistribuir/fundir nós (reparo de underflow).",
+            "As três caem junto com m — e todas saturam quando a árvore chega a 2-3 níveis.",
+            "Ou seja: o ganho de aumentar m vale para TODAS as operações, não só para a busca.",
+        ],
+        "images": [(C_PHASE, None)],
+    },
+    {
+        "layout": "text_image",
+        "title": "24. Escala do conjunto (N de mil a 1 milhão)",
+        "bullets": [
+            "Agora fixamos a ordem e variamos o tamanho do conjunto N, de mil até um MILHÃO de chaves.",
+            "Mesmo multiplicando N por mil, o número de acessos por busca quase não muda.",
+            "Motivo: o custo é logarítmico na base m — dobrar/multiplicar os dados acrescenta no máximo um nível.",
+            "Com m grande, a curva fica praticamente plana: a estrutura aguenta bases enormes.",
+            "É a tradução prática de 'escalável': cresce o dado, não cresce o custo por operação.",
+        ],
+        "images": [(C_IO_N, None)],
+    },
+    {
         "layout": "table_image",
-        "title": "6b. Resultados - reaproveitamento de nós (churn)",
+        "title": "25. Reaproveitamento de nós — resultado (churn)",
         "table": (REUSE_HEADERS, REUSE_ROWS),
         "images": [(C_REUSE, None)],
         "footnote": "O reaproveitamento de nós economiza ~27-30% do tamanho do arquivo neste workload.",
     },
     {
+        "layout": "table_image",
+        "title": "26. Dois sistemas — comparação de tempo (wall)",
+        "table": (MACH_HEADERS, MACH_ROWS),
+        "images": [(C_WALL_M, None)],
+        "footnote": "Mesmo programa, mesmo arquivo, duas máquinas. Acessos a disco idênticos; só o tempo muda — o Titan (USP) é mais rápido, mas a CURVA tem a mesma forma.",
+    },
+    {
+        "layout": "two_image",
+        "title": "27. Dois sistemas — CPU e prova de determinismo",
+        "bullets": [
+            "Esquerda: o tempo é quase todo CPU de SISTEMA (chamadas de I/O ao SO), não espera de disco — efeito do cache de páginas. Por isso o relógio não é a métrica honesta.",
+            "Direita: cada ponto é (acessos no Notebook, acessos no Titan). TODOS caem na reta y=x — ou seja, o número de acessos é exatamente igual nas duas máquinas.",
+            "Conclusão: a implementação é determinística e portável; o hardware muda o tempo, nunca o comportamento lógico.",
+        ],
+        "images": [(C_CPU, "CPU usuário vs sistema (I/O) nas 2 máquinas"),
+                   (C_DET, "Acessos a disco idênticos — pontos sobre a reta y=x")],
+    },
+    {
         "layout": "text_image",
-        "title": "7. Validação em duas máquinas",
+        "title": "28. Dois sistemas — validação cruzada (resumo)",
         "bullets": [
             "Execução em duas máquinas: Notebook x Titan (USP).",
             "Acessos a disco IDÊNTICOS nas duas — resultado determinístico, independente do hardware.",
@@ -298,18 +733,69 @@ SLIDES = [
         "images": [(C_MACH, None)] if C_MACH else [],
     },
     {
-        "layout": "bullets",
-        "title": "8. Dificuldades · Vantagens x Desvantagens",
+        "layout": "text_image",
+        "title": "29. Dois sistemas — escala do conjunto",
         "bullets": [
-            "Dificuldades: indexação 1-based dos nós; ordem do path no reparo de underflow; eofbit do fstream; garantir 1 nó por I/O (nada em RAM).",
-            "Vantagens da Árvore B: altura baixa => pouquíssimos acessos a disco; sempre balanceada; ideal para memória secundária / SGBDs.",
-            "Desvantagens: nós podem ficar subocupados (~50% no caso sequencial); remoção é complexa; para m muito grande, a busca dentro do nó passa a custar CPU.",
-            "Trade-off central: m maior => menos I/O, mais CPU por nó.",
+            "Agora variando N de mil a um MILHÃO de chaves (ordem m=100), nas duas máquinas.",
+            "Multiplicamos N por 1000 e o tempo de busca cresce devagar — porque a árvore é logarítmica na base m.",
+            "As duas máquinas mantêm a mesma tendência; o Titan fica abaixo (mais rápido), em paralelo.",
+            "É a prova prática de escalabilidade: a estrutura aguenta bases grandes sem explodir o custo.",
+        ],
+        "images": [(C_SCALE_M, None)],
+    },
+    {
+        "layout": "two_col",
+        "title": "30. E se usássemos union no header? (sugestão do prof.)",
+        "left_title": "Como está hoje",
+        "left": [
+            "Header { root, total, free_head } e BNode { n, A[], K[] } são dois tipos SEPARADOS.",
+            "Toda E/S serializa campo a campo com memcpy (readHeader/writeHeader/readNode/writeNode).",
+            "O registro 0 (header) usa só 12 bytes, mas reserva uma página inteira (PAGE_SIZE) para manter o RRN uniforme: offset = rrn × PAGE_SIZE.",
+            "O nó LIVRE \"esconde\" o ponteiro do próximo em K[1] (com n = -1) — funciona, mas é implícito.",
+        ],
+        "right_title": "Com union { Header; BNode; FreeNode; }",
+        "right": [
+            "Um único tipo Página: todos os registros (header e nós) compartilham a MESMA página de tamanho fixo — garantido em tempo de compilação por sizeof.",
+            "Lê/escreve a página inteira de uma vez e a interpreta como header (RRN 0) ou nó (RRN ≥ 1): some a serialização campo a campo → menos código e menos bugs de offset (justo as dificuldades que tivemos).",
+            "A lista de livres ganha um campo explícito FreeNode.next no lugar do \"K[1] mágico\" → autodocumentado.",
+            "Custo: gravar struct cru depende de layout/padding/endianness → menos portável (a validação Notebook×Titan supõe layout igual); ler membro ≠ do escrito é UB em C++ — mitiga-se com memcpy / std::bit_cast.",
+            "Veredito: página uniforme e código enxuto, em troca de cuidado com a portabilidade do binário.",
         ],
     },
     {
         "layout": "bullets",
-        "title": "9. Aplicações práticas",
+        "title": "31. Dificuldades técnicas",
+        "bullets": [
+            "Indexação 1-based dos nós (RRN 0 é o header): exigiu cuidado em todo cálculo de posição.",
+            "Remoção: manter o caminho (path) na ordem certa para reparar o underflow foi a parte mais difícil.",
+            "eofbit do fstream: uma leitura no fim do arquivo deixava o stream em estado de erro e fazia leituras seguintes falharem em silêncio — resolvido com clear().",
+            "Garantir de verdade 1 nó por I/O: nenhuma estrutura podia 'esconder' a árvore em RAM.",
+            "Serialização campo a campo (memcpy): funciona, mas é verbosa e propensa a erros de offset — daí a sugestão do union.",
+        ],
+    },
+    {
+        "layout": "two_col",
+        "title": "32. Vantagens × Desvantagens (trade-offs)",
+        "left_title": "Vantagens",
+        "left": [
+            "Altura baixa → pouquíssimos acessos ao disco.",
+            "Sempre balanceada, sem reorganização global.",
+            "Ideal para memória secundária e índices de SGBD.",
+            "Determinística: mesmo resultado em qualquer máquina.",
+            "Reaproveitamento de espaço via lista de livres.",
+        ],
+        "right_title": "Desvantagens / custos",
+        "right": [
+            "Nós podem ficar subocupados (~50% no caso sequencial).",
+            "Remoção é complexa (sucessor, redistribuição, fusão).",
+            "Para m muito grande, varrer as chaves dentro do nó passa a custar CPU.",
+            "Trade-off central: m maior → menos I/O, mas mais CPU por nó.",
+            "Existe, portanto, um m ÓTIMO (nó do tamanho de um bloco de disco).",
+        ],
+    },
+    {
+        "layout": "bullets",
+        "title": "33. Aplicações práticas",
         "bullets": [
             "Índices de SGBDs: B-tree / B+ tree são a base dos índices de MySQL/InnoDB, PostgreSQL, Oracle e SQL Server.",
             "Sistemas de arquivos: NTFS, HFS+/APFS, ext4 (HTree) e Btrfs usam B-trees para diretórios e metadados.",
@@ -318,17 +804,51 @@ SLIDES = [
         ],
     },
     {
+        "layout": "two_col",
+        "title": "34. Ferramentas utilizadas",
+        "left_title": "Implementação & experimentos",
+        "left": [
+            "Linguagem: C++17 (g++ -O2) — núcleo da Árvore B em disco.",
+            "Build: GNU Make (parametriza a ordem via -DM=<m>).",
+            "Persistência: std::fstream (arquivo binário, registros de tamanho fixo).",
+            "Graphviz (dot): renderiza os grafos exportados pelo programa (exportDot).",
+            "Python 3 + matplotlib / numpy: gráficos dos experimentos.",
+            "Pillow (PIL): montagem dos GIFs da demonstração.",
+            "python-pptx + reportlab: geração automática dos slides (PPTX e PDF).",
+            "Bash: run_all.sh automatiza a suíte; getrusage mede CPU/I/O.",
+            "Git/GitHub: versionamento. Validação cruzada: Notebook + servidor Titan (USP).",
+        ],
+        "right_title": "Claude (IA) — apoio, NÃO o autor",
+        "right": [
+            "Usado como assistente de apoio, revisão e incremento — a lógica da Árvore B (busca, split, remoção) é autoral.",
+            "Apoiou no desenho do MENU interativo (organização das opções e mensagens).",
+            "Apoiou na EXPORTAÇÃO DE GRAFOS (integração com Graphviz) e nos scripts de gráficos/GIF.",
+            "Revisão de código e de texto: clareza dos comentários, consistência e checagem de erros.",
+            "Incrementos de apresentação: estes slides, o roteiro e as tabelas foram gerados/revisados com apoio da IA.",
+            "Princípio: a IA acelerou ferramentas acessórias; o entendimento e as decisões do trabalho são nossos.",
+        ],
+    },
+    {
         "layout": "bullets",
-        "title": "10. Conclusão e Referências",
+        "title": "35. Conclusão",
         "bullets": [
-            "O I/O por operação cai com m até SATURAR (ponto ~ m=64-128): existe um m ótimo (nó dimensionado para um bloco de disco).",
-            "O reaproveitamento de nós (free list) economiza ~27-30% do tamanho do arquivo no workload de churn.",
-            "Resultados determinísticos: acessos a disco IDÊNTICOS em 2 máquinas (Notebook x Titan/USP); só o tempo varia.",
-            "Referências:",
-            "   - Comer, D. (1979). The Ubiquitous B-Tree. ACM Computing Surveys.",
-            "   - Knuth, D. The Art of Computer Programming, Vol. 3 - Sorting and Searching.",
-            "   - Folk, M. & Zoellick, B. File Structures.",
-            "   - Baranauskas, J. A. Slides AED-PG-2026 (Árvores B).",
+            "Implementamos uma Árvore B que opera estritamente em disco, com 1 nó por I/O — exatamente como o enunciado pede.",
+            "Achado 1: o I/O por operação cai com m até SATURAR (~ m=64-128). Existe um m ótimo — o nó dimensionado para um bloco de disco.",
+            "Achado 2: o reaproveitamento de nós (free list) economiza ~27-30% do tamanho do arquivo no workload de churn.",
+            "Achado 3: resultados DETERMINÍSTICOS — acessos a disco idênticos em 2 máquinas (Notebook x Titan/USP); só o tempo varia.",
+            "Mensagem final: a Árvore B é rasa, balanceada e econômica em acessos — por isso é a base de bancos de dados e sistemas de arquivos.",
+        ],
+    },
+    {
+        "layout": "bullets",
+        "title": "36. Referências",
+        "bullets": [
+            "Comer, D. (1979). The Ubiquitous B-Tree. ACM Computing Surveys, 11(2), 121-137.",
+            "Knuth, D. The Art of Computer Programming, Vol. 3 — Sorting and Searching.",
+            "Folk, M. & Zoellick, B. File Structures.",
+            "Bayer, R. & McCreight, E. (1972). Organization and Maintenance of Large Ordered Indexes.",
+            "Baranauskas, J. A. Slides AED-PG-2026 (Árvores B). DCM / USP.",
+            "Obrigado! Ficamos à disposição para perguntas.",
         ],
     },
 ]
@@ -448,6 +968,19 @@ def build_pptx(path):
                 add_text(slide, Inches(0.4), Inches(6.55), Inches(12.5), Inches(0.5),
                          [(s["footnote"], 11, MUTED, False, False)])
 
+        elif lay == "demo":
+            add_text(slide, Inches(0.5), body_top, Inches(12.3), Inches(1.65),
+                     [(b, 13, INK, False, True) for b in s["bullets"]], space=4)
+            add_image_fit(slide, s["gif"], Inches(2.5), Inches(3.0),
+                          Inches(8.3), Inches(3.7), s.get("caption"))
+
+        elif lay == "two_image":
+            add_text(slide, Inches(0.5), body_top, Inches(12.3), Inches(2.05),
+                     [(b, 12.5, INK, False, True) for b in s["bullets"]], space=4)
+            (img1, cap1), (img2, cap2) = s["images"][0], s["images"][1]
+            add_image_fit(slide, img1, Inches(0.4), Inches(3.5), Inches(6.2), Inches(3.2), cap1)
+            add_image_fit(slide, img2, Inches(6.85), Inches(3.5), Inches(6.2), Inches(3.2), cap2)
+
         else:
             add_text(slide, Inches(0.7), body_top, Inches(12.0), Inches(5.8),
                      [(b, 16, INK, False, True) for b in s["bullets"]])
@@ -557,7 +1090,7 @@ def build_pdf(path):
             bullets(s["right"], W/2 + 10, top - 24, W/2 - 60, size=10.5, lh=14, gap=5)
 
         elif lay == "text_image":
-            bullets(s["bullets"], 36, top, 470, size=12.5, lh=17, gap=5)
+            bullets(s["bullets"], 36, top, 442, size=12.5, lh=17, gap=5)
             img, cap = s["images"][0]
             draw_image_fit(img, 500, top + 6, 430, 380, cap)
 
@@ -570,6 +1103,17 @@ def build_pdf(path):
                 c.setFillColor(HexColor(MUTED)); c.setFont("Helvetica-Oblique", 10)
                 for k, ln in enumerate(wrap(s["footnote"], "Helvetica-Oblique", 10, W - 70)):
                     c.drawString(36, 56 - k * 13, ln)
+
+        elif lay == "demo":
+            bullets(s["bullets"], 36, top, W - 90, size=12, lh=16, gap=4)
+            draw_image_fit(s.get("poster", s.get("gif")), 30, 300, W - 60, 250,
+                           s.get("caption"))
+
+        elif lay == "two_image":
+            bullets(s["bullets"], 36, top, W - 90, size=11, lh=14.5, gap=4)
+            (img1, cap1), (img2, cap2) = s["images"][0], s["images"][1]
+            draw_image_fit(img1, 18, 250, W / 2 - 28, 200, cap1)
+            draw_image_fit(img2, W / 2 + 10, 250, W / 2 - 28, 200, cap2)
 
         else:
             bullets(s["bullets"], 40, top, W - 110, size=14, lh=20, gap=6)

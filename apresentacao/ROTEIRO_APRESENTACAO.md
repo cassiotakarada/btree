@@ -1,245 +1,271 @@
 # Roteiro de Apresentação — Árvore B em Memória Secundária
-**Duração alvo: 20 minutos** · 10 slides · AED-PG-2026
+**Duração alvo: 40 a 60 minutos** · 36 slides · ~1 a 1:30 por slide · AED-PG-2026
 
-> Como usar: cada slide tem (⏱ tempo), a **mensagem-chave** (o que a banca tem que
-> levar) e a **fala** (texto natural, pode adaptar). As frases em _itálico_ são
-> transições para o próximo slide. No fim há um bloco de **perguntas prováveis**.
+> Como usar: cada slide tem a **mensagem-chave** (o que a banca tem que levar) e a
+> **fala** (texto natural, pode adaptar). As frases em _itálico_ são transições. No
+> fim há um bloco de **perguntas prováveis**.
+>
+> **Público:** suponha que parte da plateia não conhece Árvore B. Não precisamos
+> *ensinar* a estrutura, mas a linguagem deve ser acessível — fale em termos de
+> "arquivo no disco" e "menos acessos = mais rápido".
+>
+> **Ritmo:** 36 slides. A ~1 min/slide → ~40 min; a ~1:30/slide → ~54 min. Os slides
+> marcados com (~) são candidatos a encurtar se o tempo apertar; os com (*) merecem
+> mais tempo.
 
-Orçamento de tempo (total ≈ 19 min + 1 min de folga):
-
-| Slide | Assunto | Tempo |
+| # | Slide | Alvo |
 |---|---|---|
-| 1 | Capa / abertura | 1:00 |
-| 2 | Decisões de implementação | 2:30 |
-| 3 | Métodos implementados | 2:00 |
-| 4 | Experimentos | 2:00 |
-| 5 | Métricas | 1:30 |
-| 6 | Resultados: impacto de m | 3:00 |
-| 7 | Resultados: reaproveitamento | 2:00 |
-| 8 | Validação em 2 máquinas | 1:30 |
-| 9 | Dificuldades / vantagens | 1:30 |
-| 10 | Aplicações / conclusão | 2:00 |
+| 1 | Capa | 1:00 |
+| 2 | Roteiro da apresentação (~) | 1:00 |
+| 3 | O problema e os objetivos | 1:30 |
+| 4 | Contexto: memória × disco | 1:30 |
+| 5 | Contexto: índice e métrica honesta | 1:30 |
+| 6 | Anatomia de um nó (*) | 1:30 |
+| 7 | Layout do arquivo no disco (*) | 1:30 |
+| 8 | Decisões de implementação | 1:30 |
+| 9 | O DiskManager (1 nó por I/O) | 1:30 |
+| 10 | Reaproveitamento: lista de livres | 1:30 |
+| 11 | Métodos: visão geral (~) | 1:00 |
+| 12 | Busca m-way | 1:30 |
+| 13 | Inserção e split | 1:30 |
+| 14 | Remoção | 1:30 |
+| 15 | Resumo do que o código faz (~) | 1:00 |
+| 16 | Demonstração (GIF) | 1:30 |
+| 17 | Grafos gerados | 1:00 |
+| 18 | Os experimentos | 1:30 |
+| 19 | Metodologia e ambiente | 1:30 |
+| 20 | Métricas | 1:00 |
+| 21 | Impacto de m: I/O por busca (*) | 2:00 |
+| 22 | Impacto de m: altura | 1:30 |
+| 23 | Resultados por operação | 1:30 |
+| 24 | Escala do conjunto (N) | 1:30 |
+| 25 | Reaproveitamento: resultado | 1:30 |
+| 26 | Dois sistemas: tempo (wall) | 1:30 |
+| 27 | Dois sistemas: CPU e determinismo (*) | 2:00 |
+| 28 | Dois sistemas: validação (resumo) (~) | 1:00 |
+| 29 | Dois sistemas: escala | 1:00 |
+| 30 | E se usássemos union? (*) | 2:00 |
+| 31 | Dificuldades técnicas | 1:30 |
+| 32 | Vantagens × desvantagens | 1:30 |
+| 33 | Aplicações | 1:00 |
+| 34 | Ferramentas utilizadas | 1:30 |
+| 35 | Conclusão | 1:30 |
+| 36 | Referências / encerramento | 0:30 |
 
 ---
 
-## Slide 1 — Capa ⏱ 1:00
-**Mensagem-chave:** o que é o trabalho em uma frase.
+## Parte 1 — A estrutura
 
-**Fala:**
-"Bom dia/boa tarde. Nosso trabalho é a implementação de uma **Árvore B de ordem m
-que opera estritamente em memória secundária** — ou seja, a árvore vive inteira em
-um arquivo binário no disco, e a regra de ouro é: **toda operação lê ou escreve um
-nó por vez**, nunca carregando a árvore para a RAM. Eu sou o Cássio, e ao longo da
-apresentação vou mostrar a estrutura, os métodos, e principalmente a **avaliação
-experimental**, que é onde estão os resultados mais interessantes."
+**1. Capa.** _Mensagem:_ o que é o trabalho em uma frase.
+"Nosso trabalho é uma **Árvore B de ordem m que opera estritamente em memória
+secundária** — a árvore vive num arquivo no disco e toda operação lê ou escreve **um
+nó por vez**, nunca a árvore inteira." _Apresentem-se e citem o foco na avaliação
+experimental._
 
-_"Vamos começar pelas decisões de implementação."_
+**2. Roteiro.** _Mensagem:_ mapa da fala. "Primeiro a estrutura — contexto, como o nó
+e o arquivo são, os métodos e uma demo. Depois a avaliação — experimentos, impacto de
+m, comparação entre duas máquinas e a discussão final." _Passe rápido._
 
----
+**3. Problema e objetivos.** _Mensagem:_ o que o enunciado pede. "Implementar a Árvore
+B residindo em **disco**, lida em blocos, **nunca inteira na RAM**; com busca,
+inserção e remoção; contando acessos ao disco. Acrescentamos uma avaliação empírica e
+validação em mais de uma máquina." _"Por que disco importa tanto?"_
 
-## Slide 2 — Decisões de implementação ⏱ 2:30
-**Mensagem-chave:** como garantimos "1 nó por I/O" e onde fica cada coisa no arquivo.
+**4. Contexto: memória × disco.** _Mensagem:_ disco é o gargalo. "RAM é rápida, mas
+pequena e volátil; disco é enorme e permanente, porém **milhares de vezes mais
+lento**. Logo, o segredo da velocidade é fazer o **menor número de acessos ao
+disco**." _"E como evitamos ler o arquivo todo?"_
 
-**Fala:**
-"Quatro decisões definem o projeto.
-Primeiro, a **ordem m é uma constante de compilação** — a estrutura é totalmente
-parametrizada, então a mesma classe roda como ordem 3 ou ordem 1000 só mudando um
-`#define`.
-Segundo, **a raiz fica no header do arquivo**, no registro 0, junto com o total de
-nós e a cabeça da lista de livres. Assim, ao abrir o arquivo, sabemos onde começar
-sem varrer nada.
-Terceiro, e mais importante para o enunciado: **um nó por I/O**. Cada nó é um
-registro de tamanho fixo (`PAGE_SIZE`); `readNode` e `writeNode` leem/escrevem
-exatamente um registro. A árvore **nunca** é carregada inteira — isso é o que o
-enunciado exige e o que desqualifica trabalhos que sobem tudo para a RAM.
-Quarto, o **reaproveitamento de nós**: quando uma remoção libera um nó, ele entra
-numa **lista de livres encadeada dentro do próprio arquivo** — o nó livre é marcado
-com n = -1 e guarda o ponteiro para o próximo. Na próxima alocação, reusamos esse
-nó antes de crescer o arquivo.
-À direita vocês veem uma árvore de ordem 3 de verdade, exportada pelo nosso código
-via Graphviz — repare que cada caixa mostra o **RRN**, o número do registro no disco."
+**5. Contexto: índice e métrica.** _Mensagem:_ índice + métrica honesta. "Um **índice**
+diz onde cada registro está, evitando ler tudo — é o que a Árvore B faz em bancos de
+dados. E a métrica honesta **não é o relógio**, é o **número de acessos ao disco**,
+que independe do hardware." _"Vamos ver como um nó é por dentro."_
 
-_"Esses são os métodos que implementamos sobre essa base."_
+**6. Anatomia de um nó. (*)** _Mensagem:_ o que há dentro de um nó. "Cada nó é um
+registro de **tamanho fixo**: o campo **n** (quantas chaves), o vetor de **ponteiros
+A[ ]** (os RRN dos filhos) e o vetor de **chaves K[ ]**. Um nó de ordem m guarda até
+m-1 chaves. Ler um nó = **um acesso ao disco**." _"E como esses nós ficam no arquivo?"_
 
----
+**7. Layout do arquivo. (*)** _Mensagem:_ o arquivo é um vetor de registros. "O arquivo
+é um **vetor de registros** numerados por RRN. O registro 0 é o **header** (raiz,
+total, free_head). Achamos qualquer nó por **cálculo direto**: offset = RRN ×
+PAGE_SIZE. E nós removidos entram numa **lista de livres** para reuso." _"Com isso, as
+decisões de projeto."_
 
-## Slide 3 — Métodos implementados ⏱ 2:00
-**Mensagem-chave:** cobrimos busca, inserção e remoção completas + ferramentas.
+**8. Decisões de implementação.** _Mensagem:_ as 4 decisões. "Ordem m como constante de
+compilação; raiz no header; **um nó por I/O**; e reaproveitamento de nós via lista de
+livres. À direita, uma árvore de ordem 3 real, exportada pelo código." _"Toda a E/S
+passa por uma classe."_
 
-**Fala:**
-"As três operações essenciais estão completas.
-A **busca** é m-way: em cada nó as chaves particionam o universo em faixas, e
-descemos pela faixa certa até a folha.
-A **inserção** é bottom-up: acha a folha, insere, e se o nó estoura, faz o **split**
-- a mediana sobe para o pai, e isso pode propagar até criar uma nova raiz.
-A **remoção** é a parte mais delicada: se a chave está num nó interno, trocamos pelo
-**sucessor in-order**; e se um nó fica abaixo do mínimo, reparamos com
-**redistribuição** (pega emprestada uma chave do irmão) ou **fusão** com o irmão.
-Além disso implementamos as **funcionalidades de monitoramento** que o enunciado
-incentiva: impressão hierárquica, cálculo de altura, exportação para Graphviz, e -
-fundamental - o **contador de acessos ao disco**, que é a métrica central da
-avaliação."
+**9. O DiskManager.** _Mensagem:_ onde mora o '1 nó por I/O'. "readNode e writeNode leem
+e escrevem **um** registro — e é aqui que fica o **contador de acessos**, a métrica
+central. A lógica da árvore só enxerga o disco pelo DiskManager, então nada vai
+inteiro para a RAM." _"E quando um nó é liberado?"_
 
-_"Com a classe pronta, partimos para os experimentos."_
+**10. Reaproveitamento.** _Mensagem:_ como a free list funciona. "Ao remover, o nó vira
+**livre** e entra numa pilha encadeada no próprio arquivo (cabeça no header). A
+próxima alocação **reusa** um livre antes de crescer o arquivo. É ligável — usamos
+isso para medir o ganho de espaço." _"Agora os métodos."_
 
----
+**11. Métodos: visão geral. (~)** _Mensagem:_ as três operações + ferramentas. "Busca,
+inserção e remoção, todas em disco, mais as ferramentas de monitoramento. Vou detalhar
+uma a uma." _Não leia item a item._
 
-## Slide 4 — Experimentos ⏱ 2:00
-**Mensagem-chave:** a matriz de testes é ampla e cobre todos os itens do enunciado.
+**12. Busca m-way.** _Mensagem:_ desce por faixas. "Em cada nó, as chaves dividem o
+universo em **faixas**; descemos pela faixa certa até a folha. O custo é ~**a altura**
+em acessos — pouquíssimos. No grafo, buscar 70 custa 2 acessos." _"Inserir é parecido,
+até estourar."_
 
-**Fala:**
-"Fizemos quatro experimentos.
-O **Experimento 1** varia a ordem m de 3 até 1000, com N fixo em cem mil chaves -
-é o que mostra o impacto de m.
-O **Experimento 2** varia o tamanho do conjunto de mil a um **milhão** de chaves,
-para ordens pequena e grandes.
-O **Experimento 3** mede a ocupação do arquivo **com e sem** reaproveitamento.
-E o **Experimento 4** separa o tempo de CPU do tempo de espera de I/O.
-Tudo isso nos modos **aleatório e sequencial**.
-E como novidade, rodamos a suíte em **duas máquinas** - meu notebook e o servidor
-Titan da USP - para validação cruzada. O gráfico mostra o ponto central que vamos
-detalhar: o número de acessos por busca quase **não cresce** mesmo multiplicando N
-por mil, porque a árvore é logarítmica na base m."
+**13. Inserção e split.** _Mensagem:_ split mantém o balanço. "Acha a folha e insere; se
+o nó **estoura**, dividimos em dois e a **mediana sobe** para o pai. Isso pode
+propagar e criar uma nova raiz — é o que mantém a árvore **sempre balanceada**."
+_"Remover é o caso mais delicado."_
 
-_"Antes dos números, as métricas que medimos."_
+**14. Remoção.** _Mensagem:_ sucessor, redistribuição, fusão. "Se a chave está num nó
+interno, trocamos pelo **sucessor**. Se uma folha fica abaixo do mínimo, reparamos:
+**redistribuição** (empréstimo de um irmão) ou **fusão** (junta com o irmão). A fusão
+pode propagar para cima e baixar a árvore." _"Num slide, tudo que o código faz."_
 
----
+**15. Resumo do código. (~)** _Mensagem:_ núcleo + extras. "À esquerda o núcleo da
+árvore em disco; à direita os extras de avaliação (contador, free list, grafos,
+benchmark). O núcleo é a estrutura; os extras existem para **medi-la**." _"Vamos ver
+rodando."_
 
-## Slide 5 — Métricas ⏱ 1:30
-**Mensagem-chave:** a métrica honesta é o contador de acessos, não o relógio.
+**16. Demonstração (GIF).** _Mensagem:_ é real. "Execução de verdade: do `make M=3` por
+**cada item do menu** — inserir, buscar, remover, acessos, imprimir, exportar grafo —
+e depois com m=5, onde a árvore fica mais rasa." _"E o próprio programa desenha o
+grafo."_
 
-**Fala:**
-"Medimos seis coisas. A principal é **acessos ao disco** - o contador de leituras e
-escritas de nós, total e média por operação. Essa é a métrica **honesta e
-independente de hardware**.
-Medimos também a **altura**, a **ocupação do arquivo** (nós físicos, nós livres e
-bytes), e o **tempo**, decomposto em CPU de usuário, CPU de sistema e espera de I/O,
-usando `getrusage`.
-Uma observação importante que aparece já no gráfico de altura: a altura cai em
-degraus conforme m cresce - de 14 níveis em m=3 para 2 níveis em m grande."
+**17. Grafos gerados.** _Mensagem:_ m maior = mais raso. "Exportados pelo programa via
+Graphviz. Cada caixa é um nó no disco (RRN). m=3 precisa de mais níveis; m=5 fica mais
+raso — **menos acessos**." _"Como medimos isso de forma sistemática."_
 
-_"Agora os resultados - começando pelo impacto da ordem m."_
+## Parte 2 — A avaliação
 
----
+**18. Os experimentos.** _Mensagem:_ a matriz cobre o enunciado. "Quatro experimentos:
+impacto de m; escala de N (mil a um milhão); ocupação com/sem reuso; e decomposição do
+tempo. Tudo aleatório e sequencial, em **duas máquinas**." _"Como exatamente
+medimos."_
 
-## Slide 6 — Resultados: impacto de m ⏱ 3:00 ⭐ (slide mais importante)
-**Mensagem-chave:** I/O despenca com m e SATURA - esse é o achado principal.
+**19. Metodologia e ambiente.** _Mensagem:_ rigor. "Driver não interativo emite CSV;
+cada caso é reconstruído do zero; medimos com getrusage (CPU usuário, CPU sistema,
+espera de I/O); duas máquinas — Notebook e Titan/USP — com automação." _"As seis
+métricas."_
 
-**Fala:**
-"Esse é o resultado central. Olhem a coluna **busca I/O por operação**: com **m=3**,
-cada busca custa **13 acessos** ao disco e a árvore tem **14 níveis**. À medida que
-aumentamos m, isso despenca: m=16 já cai para ~5 acessos, e a partir de **m≈512** a
-busca custa só **2 acessos**, com altura 2.
-Mas reparem no **ponto-chave**: o ganho **satura**. Entre m=64 e m=128 a busca já
-está em ~3 acessos e quase não melhora mais. Por quê? Porque a árvore já tem só 2-3
-níveis - não dá para ficar mais rasa. A partir daí, aumentar m **não reduz mais
-I/O**; só aumenta o custo de **CPU** para varrer as chaves dentro do nó.
-Ou seja: existe um **m ótimo** - grande o suficiente para a árvore ser rasa, mas não
-exagerado. No mundo real, esse m é escolhido para o nó caber em um bloco de disco.
-É exatamente o comportamento que a teoria prevê, e conseguimos medi-lo
-empiricamente."
+**20. Métricas. (~)** _Mensagem:_ a honesta é o contador. "Acessos ao disco (a
+principal), altura, ocupação e tempo decomposto. A altura já cai em degraus com m."
+_"O resultado central: impacto de m."_
 
-_"O segundo resultado é sobre espaço: o reaproveitamento de nós."_
+**21. Impacto de m: I/O por busca. (*)** _Mensagem:_ despenca e **satura**. "Com m=3,
+13 acessos por busca e 14 níveis. Subindo m, despenca: m=512 → 2 acessos. Mas o ganho
+**satura** entre m=64 e 128 — a árvore já é rasa demais. Existe um **m ótimo**, do
+tamanho de um bloco de disco." _"O mesmo aparece na altura."_
 
----
+**22. Impacto de m: altura.** _Mensagem:_ altura ~ acessos. "A altura cai em degraus de
+14 (m=3) para 2 (m grande). Altura baixa é a razão de existir da Árvore B." _"E nas
+três operações?"_
 
-## Slide 7 — Resultados: reaproveitamento ⏱ 2:00
-**Mensagem-chave:** a free list economiza ~27-30% de espaço.
+**23. Resultados por operação.** _Mensagem:_ o ganho vale para todas. "Busca é a mais
+barata; inserção um pouco mais (split); remoção a mais cara (lê irmãos). As três caem
+com m e **todas saturam**." _"E quando o conjunto cresce?"_
 
-**Fala:**
-"Aqui medimos a **ocupação do arquivo** num cenário de *churn*: inserimos N chaves,
-removemos metade, e reinserimos outra metade.
-Com o reaproveitamento **ligado**, a reinserção consome os nós que ficaram livres e
-o arquivo **não cresce**. Com ele **desligado**, cada alocação acrescenta um
-registro novo no fim e o arquivo **incha**.
-O resultado é consistente em todas as ordens: o reaproveitamento **economiza entre
-27 e 30%** do tamanho do arquivo. Para uma estrutura de disco, onde espaço e
-localidade importam, isso é significativo."
+**24. Escala do conjunto.** _Mensagem:_ escalável. "Multiplicamos N por mil e o custo
+por busca **mal muda** — é logarítmico na base m. A estrutura aguenta bases enormes."
+_"O segundo eixo: espaço."_
 
-_"Sobre o processo: validamos os resultados em duas máquinas."_
+**25. Reaproveitamento: resultado.** _Mensagem:_ ~30% de economia. "No churn (insere,
+remove metade, reinsere), com reuso o arquivo **não cresce**; sem reuso, **incha**. A
+free list economiza **27-30%**." _"Sobre o processo: validação em duas máquinas."_
 
----
+**26. Dois sistemas: wall.** _Mensagem:_ a forma é igual. "Notebook × Titan: acessos a
+disco **idênticos**; só o tempo muda. As curvas têm **a mesma forma**." _"Por que o
+relógio engana — e a prova de determinismo."_
 
-## Slide 8 — Validação em duas máquinas ⏱ 1:30
-**Mensagem-chave:** prova de determinismo e portabilidade.
+**27. Dois sistemas: CPU e determinismo. (*)** _Mensagem:_ idêntico nas duas. "À
+esquerda: o tempo é quase todo **CPU de sistema** (I/O via cache), por isso o relógio
+não é honesto. À direita: todos os pontos caem na reta **y=x** — acessos
+**rigorosamente iguais**. Determinístico e portável." _"Resumindo a validação."_
 
-**Fala:**
-"O gráfico mostra a validação em duas máquinas: notebook contra o servidor Titan.
-Os **tempos** diferem, claro - hardwares diferentes - mas **todas as métricas de
-acesso a disco saíram idênticas**, byte a byte. Isso **prova** que a implementação é
-determinística e portável; a diferença é só de máquina, não de comportamento."
+**28. Validação: resumo. (~)** _Mensagem:_ portabilidade. "Métricas de acesso idênticas
+byte a byte; só o tempo difere; comparação automatizada por script." _"E a escala nas
+duas?"_
 
-_"Quais foram as dificuldades e os trade-offs?"_
+**29. Dois sistemas: escala.** _Mensagem:_ tendência igual. "De mil a um milhão nas duas
+máquinas: mesma tendência, Titan em paralelo abaixo. Escala comprovada." _"Um ponto que
+o professor levantou: o union."_
 
----
+**30. E se usássemos union? (*)** _Mensagem:_ página única × portabilidade. "Hoje header
+e nó são tipos separados, com serialização campo a campo. Com **union**, seriam uma
+**página única** de tamanho fixo: ler/gravar de uma vez, menos código e bugs, free
+list explícita. Custo: **portabilidade** (padding/endianness) e o UB de type-punning,
+resolvível com memcpy/bit_cast. Mais limpo, exigindo cuidado com o formato binário."
+_"Quais foram as dificuldades?"_
 
-## Slide 9 — Dificuldades · Vantagens × Desvantagens ⏱ 1:30
-**Mensagem-chave:** entendemos o custo-benefício da estrutura.
+**31. Dificuldades técnicas.** _Mensagem:_ o que custou. "Indexação a partir do RRN 0; a
+ordem do path na remoção; o `eofbit` que silenciava leituras; e garantir 1 nó por I/O.
+A serialização verbosa foi o que motivou a ideia do union." _"E os trade-offs?"_
 
-**Fala:**
-"As maiores dificuldades foram a **remoção** - manter o caminho na ordem certa para
-reparar o underflow - e detalhes de I/O como o `eofbit`, que fazia leituras falharem
-silenciosamente.
-Sobre os trade-offs: a Árvore B é **imbatível para disco** - rasa, balanceada, pouco
-I/O. Em troca, os nós podem ficar **subocupados** (no caso sequencial, ~50% cheios),
-a remoção é complexa, e como vimos, m muito grande troca I/O por CPU. É um
-**equilíbrio** consciente."
+**32. Vantagens × desvantagens.** _Mensagem:_ equilíbrio consciente. "Vantagens: rasa,
+balanceada, determinística, econômica. Custos: nós subocupados, remoção complexa, e m
+grande troca I/O por CPU — daí o **m ótimo**." _"Onde isso é usado de verdade?"_
 
-_"Para fechar: onde isso é usado e as conclusões."_
+**33. Aplicações.** _Mensagem:_ está em tudo. "Índices de MySQL e PostgreSQL, sistemas
+de arquivos (NTFS, ext4), key-value stores (SQLite, LMDB). Eu usaria como índice de um
+banco em disco." _"Com que ferramentas construímos isso?"_
 
----
+**34. Ferramentas utilizadas.** _Mensagem:_ stack + papel da IA. "Implementação: C++17,
+Make, fstream, Graphviz. Avaliação: Python/matplotlib, Pillow (GIFs), python-pptx e
+reportlab (slides); Git; duas máquinas. E sou transparente: usamos o Claude como
+**apoio, revisão e incremento** — no menu, na exportação de grafos e na revisão. A
+**lógica da Árvore B é nossa**; a IA acelerou ferramentas acessórias." _"Para fechar."_
 
-## Slide 10 — Aplicações · Conclusão · Referências ⏱ 2:00
-**Mensagem-chave:** isso roda no mundo todo + recapitular os 3 achados.
+**35. Conclusão.** _Mensagem:_ os três achados. "Um: I/O cai com m até **saturar** —
+existe m ótimo. Dois: a free list economiza **~30%**. Três: resultados
+**determinísticos** em duas máquinas. A Árvore B é rasa, balanceada e econômica — por
+isso é a base de bancos e sistemas de arquivos." _"Referências e obrigado."_
 
-**Fala:**
-"Onde a Árvore B aparece na prática? Em praticamente **todo banco de dados** - os
-índices do MySQL/InnoDB e do PostgreSQL são B-trees (na verdade B+ trees); em
-**sistemas de arquivos** como NTFS e ext4; e em key-value stores.
-Recapitulando nossas três conclusões:
-um - o I/O por operação **cai com m até saturar**, por volta de m de 64 a 128;
-dois - o reaproveitamento de nós **economiza ~30%** de espaço;
-três - os resultados são **determinísticos**, validados em duas máquinas.
-As referências estão no slide, com destaque para o artigo clássico do Comer, 'The
-Ubiquitous B-Tree'. Obrigado! Fico à disposição para perguntas."
+**36. Referências.** Comer (1979); Knuth, TAOCP vol. 3; Folk & Zoellick; Bayer &
+McCreight (1972); slides do Prof. Baranauskas. "Obrigado! Ficamos à disposição."
 
 ---
 
-## Perguntas prováveis (preparação) 🎯
+## Perguntas prováveis (preparação)
 
-**"Árvore B não é binária? Ordem 3 não seria o padrão?"**
-→ "Não. Binária é a BST, com 2 filhos. A Árvore B é **m-way**: até m filhos. O 'B'
-não é de *binary* - é de balanceada (Bayer). O objetivo é justamente **não** ser
-binária: m grande deixa a árvore rasa e reduz acessos a disco. Aliás, ordem 2 (que
-seria 'binária') é degenerada e nosso código a proíbe; ordem 3 é só o **menor caso**
-que testamos, o pior em número de acessos."
+**"Árvore B não é binária?"** → "Não. Binária é a BST (2 filhos). A Árvore B é
+**m-way** (até m filhos); o 'B' é de balanceada (Bayer). m grande deixa a árvore rasa.
+Ordem 2 é degenerada e o código a proíbe; ordem 3 é só o menor caso testado."
 
-**"Por que o tempo aparece quase todo como CPU, e não como espera de I/O?"**
-→ "Porque o `writeNode` faz `flush` para o **cache de páginas do SO**, não um `fsync`
-no disco físico. Numa máquina com RAM sobrando, o 'I/O' vira CPU de sistema. Por isso
-a métrica honesta e comparável é o **contador de acessos**, não o relógio."
+**"Por que o tempo aparece como CPU, não como espera de I/O?"** → "Porque `writeNode`
+faz `flush` para o **cache de páginas do SO**, não `fsync` no disco físico. O 'I/O'
+vira CPU de sistema. Por isso a métrica honesta é o **contador de acessos**."
 
-**"Onde fica a raiz e por que isso importa?"**
-→ "No header, registro 0. Assim abrimos o arquivo e já sabemos a raiz com uma leitura
-de metadado, sem custo de busca."
+**"O que mudaria de fato com o union no header?"** → "Header e nó virariam **uma página
+única** de tamanho fixo garantido em compilação: ler/gravar de uma vez, sem `memcpy`
+campo a campo, e free list explícita. Custo: portabilidade (padding/endianness) e UB
+de type-punning, resolvível com `memcpy`/`std::bit_cast`."
 
-**"Como funciona o reaproveitamento exatamente?"**
-→ "Lista de livres encadeada no próprio arquivo: a cabeça fica no header (`free_head`),
-e cada nó livre guarda o próximo em `K[1]`, marcado com n = -1. `allocNode` puxa
-dessa lista antes de estender o arquivo."
+**"Onde fica a raiz?"** → "No header, registro 0 — uma leitura de metadado e já sabemos
+a raiz."
 
-**"Qual o m ideal na prática?"**
-→ "Aquele em que o nó preenche um **bloco de disco** (ex.: 4 KB ou 8 KB). Aí cada
-acesso a disco traz o máximo de chaves úteis - é onde a curva do slide 6 satura."
+**"Como funciona o reaproveitamento?"** → "Lista de livres encadeada no arquivo: cabeça
+em `free_head`, cada livre guarda o próximo em `K[1]` com n=-1; `allocNode` puxa dela
+antes de estender o arquivo."
 
-**"Por que a inserção sequencial gera arquivo maior?"**
-→ "Porque o split sempre acontece à direita, deixando os nós ~50% cheios; no
-aleatório a ocupação fica ~69% (ln 2), então cabem mais chaves por nó."
+**"Qual o m ideal na prática?"** → "Aquele em que o nó preenche um **bloco de disco**
+(4-8 KB) — é onde a curva do slide 21 satura."
+
+**"Por que a inserção sequencial gera arquivo maior?"** → "O split sempre cai à direita,
+deixando nós ~50% cheios; no aleatório a ocupação fica ~69% (ln 2)."
+
+**"A IA fez o trabalho?"** → "Não. A lógica da Árvore B é nossa; a IA apoiou ferramentas
+acessórias (menu, grafos, scripts) e revisão. As decisões e a análise são nossas."
 
 ---
 
 ### Dicas de cronometragem
-- Se estiver **adiantado**: detalhe mais o slide 6 (o ponto de saturação) e o 7.
-- Se estiver **atrasado**: nos slides 3 e 5, leia só os títulos dos bullets.
-- **Não leia os slides palavra por palavra** - eles são o apoio visual; a fala acima
-  é a narração.
+- **40 min (rápido):** ~1 min/slide; encurte os marcados (~) (2, 11, 15, 20, 28) lendo
+  só os títulos.
+- **50-60 min (completo):** detalhe os marcados (*) (6, 7, 21, 27, 30) e responda
+  perguntas no fim de cada parte.
+- **Não leia os slides palavra por palavra** — a fala acima é a narração; os slides são
+  o apoio visual.

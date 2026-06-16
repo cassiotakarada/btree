@@ -1,0 +1,7 @@
+$ make M=5
+rm -f .m_stamp_*
+touch .m_stamp_5
+g++ -std=c++17 -Wall -Wextra -O2 -DM=5 -c -o main.o main.cpp
+g++ -std=c++17 -Wall -Wextra -O2 -DM=5 -c -o src/disk_manager.o src/disk_manager.cpp
+g++ -std=c++17 -Wall -Wextra -O2 -DM=5 -c -o src/btree.o src/btree.cpp
+g++ -std=c++17 -Wall -Wextra -O2 -DM=5 -o btree main.o src/disk_manager.o src/btree.o
