@@ -940,21 +940,22 @@ def build_pptx(path):
 
         if lay == "image_full":
             add_text(slide, Inches(0.5), body_top, Inches(12.3), Inches(2.95),
-                     [(b, 13, INK, False, True) for b in s["bullets"]], space=5)
+                     [(b, 15, INK, False, True) for b in s["bullets"]], space=8)
             img, cap = s["images"][0]
             add_image_fit(slide, img, Inches(0.5), Inches(4.2), Inches(12.3), Inches(2.65), cap)
 
         elif lay == "two_col":
             lruns = [(s["left_title"], 15, ACCENT, True, False)] + \
-                    [(b, 12.5, INK, False, True) for b in s["left"]]
+                    [(b, 14, INK, False, True) for b in s["left"]]
             rruns = [(s["right_title"], 15, ACCENT, True, False)] + \
-                    [(b, 12.5, INK, False, True) for b in s["right"]]
+                    [(b, 14, INK, False, True) for b in s["right"]]
             add_text(slide, Inches(0.45), body_top, Inches(6.15), Inches(5.9), lruns, space=5)
             add_text(slide, Inches(6.85), body_top, Inches(6.15), Inches(5.9), rruns, space=5)
 
         elif lay == "text_image":
             add_text(slide, Inches(0.5), body_top, Inches(6.4), Inches(5.8),
-                     [(b, 14, INK, False, True) for b in s["bullets"]])
+                     [(b, 16, INK, False, True) for b in s["bullets"]],
+                     anchor=MSO_ANCHOR.MIDDLE, space=8)
             img, cap = s["images"][0]
             add_image_fit(slide, img, Inches(6.95), Inches(1.5), Inches(6.1), Inches(5.0), cap)
 
@@ -969,20 +970,21 @@ def build_pptx(path):
 
         elif lay == "demo":
             add_text(slide, Inches(0.5), body_top, Inches(12.3), Inches(1.65),
-                     [(b, 13, INK, False, True) for b in s["bullets"]], space=4)
+                     [(b, 15, INK, False, True) for b in s["bullets"]], space=6)
             add_image_fit(slide, s["gif"], Inches(2.5), Inches(3.0),
                           Inches(8.3), Inches(3.7), s.get("caption"))
 
         elif lay == "two_image":
             add_text(slide, Inches(0.5), body_top, Inches(12.3), Inches(2.05),
-                     [(b, 12.5, INK, False, True) for b in s["bullets"]], space=4)
+                     [(b, 14, INK, False, True) for b in s["bullets"]], space=4)
             (img1, cap1), (img2, cap2) = s["images"][0], s["images"][1]
             add_image_fit(slide, img1, Inches(0.4), Inches(3.5), Inches(6.2), Inches(3.2), cap1)
             add_image_fit(slide, img2, Inches(6.85), Inches(3.5), Inches(6.2), Inches(3.2), cap2)
 
         else:
             add_text(slide, Inches(0.7), body_top, Inches(12.0), Inches(5.8),
-                     [(b, 16, INK, False, True) for b in s["bullets"]])
+                     [(b, 20, INK, False, True) for b in s["bullets"]],
+                     anchor=MSO_ANCHOR.MIDDLE, space=12)
 
         footer(slide, idx)
 
@@ -1078,18 +1080,18 @@ def build_pdf(path):
         top = H - 88
 
         if lay == "image_full":
-            bullets(s["bullets"], 36, top, W - 90, size=12.5, lh=17, gap=5)
+            bullets(s["bullets"], 36, top, W - 90, size=14, lh=20, gap=7)
             img, cap = s["images"][0]
             draw_image_fit(img, 30, 220, W - 60, 180, cap)
 
         elif lay == "two_col":
             c.setFillColor(HexColor(ACCENT)); c.setFont("Helvetica-Bold", 13)
             c.drawString(36, top, s["left_title"]); c.drawString(W/2 + 10, top, s["right_title"])
-            bullets(s["left"], 36, top - 24, W/2 - 70, size=10.5, lh=14, gap=5)
-            bullets(s["right"], W/2 + 10, top - 24, W/2 - 60, size=10.5, lh=14, gap=5)
+            bullets(s["left"], 36, top - 24, W/2 - 70, size=11.5, lh=16, gap=7)
+            bullets(s["right"], W/2 + 10, top - 24, W/2 - 60, size=11.5, lh=16, gap=7)
 
         elif lay == "text_image":
-            bullets(s["bullets"], 36, top, 442, size=12.5, lh=17, gap=5)
+            bullets(s["bullets"], 36, top - 30, 442, size=14, lh=22, gap=9)
             img, cap = s["images"][0]
             draw_image_fit(img, 500, top + 6, 430, 380, cap)
 
@@ -1115,7 +1117,7 @@ def build_pdf(path):
             draw_image_fit(img2, W / 2 + 10, 250, W / 2 - 28, 200, cap2)
 
         else:
-            bullets(s["bullets"], 40, top, W - 110, size=14, lh=20, gap=6)
+            bullets(s["bullets"], 40, top - 60, W - 110, size=17, lh=27, gap=10)
 
         c.setFillColor(HexColor(MUTED)); c.setFont("Helvetica", 8)
         c.drawString(36, 16, "Árvore B em Memória Secundária — AED-PG-2026")
@@ -1125,7 +1127,424 @@ def build_pdf(path):
     c.save()
     print("PDF:", path)
 
+# ---------------------------------------------------------------------------
+# Versão CLEAN: mesmos gráficos/tabelas/resultados, texto enxuto (a fala cobre
+# os detalhes). Reaproveita todos os C_* / tabelas já gerados acima; só troca o
+# conteúdo textual dos slides e os nomes de saída (APRESENTACAO_2).
+# ---------------------------------------------------------------------------
+SLIDES = [
+    {
+        "layout": "cover",
+        "title": "Árvore B em Memória Secundária",
+        "subtitle": "Uma classe Árvore B de ordem m operando estritamente em disco",
+        "bullets": [
+            "Algoritmos e Estruturas de Dados — AED-PG-2026 (5955001-3)",
+            "Prof. Dr. José Augusto Baranauskas — DCM / USP",
+            "C++17  ·  1º Semestre/2026",
+            "Cássio Takarada  ·  Cézio Luiz Ferreira Junior",
+        ],
+    },
+    {
+        "layout": "two_col",
+        "title": "Roteiro",
+        "left_title": "Parte 1 — a estrutura",
+        "left": [
+            "Por que disco e por que Árvore B",
+            "Anatomia do nó e do arquivo",
+            "Busca, inserção e remoção",
+            "Demonstração ao vivo",
+        ],
+        "right_title": "Parte 2 — a avaliação",
+        "right": [
+            "Experimentos e métricas",
+            "Impacto da ordem m",
+            "Escala e reaproveitamento",
+            "Validação em 2 máquinas + conclusões",
+        ],
+    },
+    {
+        "layout": "bullets",
+        "title": "O problema",
+        "bullets": [
+            "Árvore B de ordem m que reside em disco (arquivo)",
+            "Nunca carregada inteira — 1 nó por acesso",
+            "Busca, inserção e remoção balanceadas",
+            "Meta extra: avaliar m, escala e 2 máquinas",
+        ],
+    },
+    {
+        "layout": "bullets",
+        "title": "Contexto — memória rápida × disco lento",
+        "bullets": [
+            "RAM: rápida, pequena, volátil",
+            "Disco: enorme, permanente, milhares de vezes mais lento",
+            "Gargalo = disco, não CPU",
+            "Objetivo: minimizar acessos ao disco",
+        ],
+    },
+    {
+        "layout": "bullets",
+        "title": "O índice e a métrica honesta",
+        "bullets": [
+            "Índice = sumário que evita ler o arquivo inteiro",
+            "Árvore B: índice real de SGBDs e sistemas de arquivos",
+            "Métrica honesta = nº de acessos ao disco (não o relógio)",
+            "O relógio engana: a escrita vai ao cache do SO",
+        ],
+    },
+    {
+        "layout": "text_image",
+        "title": "Anatomia de um nó",
+        "bullets": [
+            "Registro de tamanho fixo, lido de uma vez",
+            "Campos: n · ponteiros A[ ] · chaves K[ ]",
+            "Ordem m → até m-1 chaves e m filhos",
+            "1 nó = 1 acesso ao disco",
+        ],
+        "images": [(C_NODE, None)],
+    },
+    {
+        "layout": "text_image",
+        "title": "Layout do arquivo no disco",
+        "bullets": [
+            "Arquivo = vetor de registros (RRN)",
+            "RRN 0 = header (root, total, free_head)",
+            "offset = RRN × PAGE_SIZE → acesso direto",
+            "Nós removidos → lista de livres (reuso)",
+        ],
+        "images": [(C_FILE, None)],
+    },
+    {
+        "layout": "image_full",
+        "title": "Decisões de implementação",
+        "bullets": [
+            "Ordem m = constante de compilação (M)",
+            "Raiz no header · 1 nó por I/O · nunca carrega tudo",
+            "Free list no próprio arquivo (reaproveitamento)",
+        ],
+        "images": [(G("m3_final.png"), "Árvore B (m=3, 40 chaves) exportada pelo próprio código — o número é o RRN no disco")],
+    },
+    {
+        "layout": "bullets",
+        "title": "O DiskManager — um nó por I/O",
+        "bullets": [
+            "Toda E/S passa por uma única classe",
+            "readNode / writeNode = 1 registro de PAGE_SIZE",
+            "Aqui mora o contador de acessos (métrica central)",
+            "A árvore nunca é carregada inteira",
+        ],
+    },
+    {
+        "layout": "bullets",
+        "title": "Reaproveitamento — a lista de livres",
+        "bullets": [
+            "Remoção libera nó → vira nó LIVRE",
+            "freeNode encadeia na lista (free_head no header)",
+            "allocNode reusa antes de crescer o arquivo",
+            "Ligável (setReuse) — medido no churn",
+        ],
+    },
+    {
+        "layout": "bullets",
+        "title": "Métodos — visão geral",
+        "bullets": [
+            "Busca m-way (mSearch)",
+            "Inserção bottom-up com split (insertB)",
+            "Remoção: sucessor, redistribuição e fusão (deleteB)",
+            "Monitoramento: printTree · height · exportDot",
+        ],
+    },
+    {
+        "layout": "text_image",
+        "title": "Busca m-way",
+        "bullets": [
+            "Chaves dividem o universo em faixas",
+            "Desce pelo ponteiro da faixa certa",
+            "Custo ≈ altura da árvore",
+            "Buscar 70: apenas 2 acessos",
+        ],
+        "images": [(G("m3_final.png"), "A busca segue um caminho da raiz à folha")],
+    },
+    {
+        "layout": "bullets",
+        "title": "Inserção e split",
+        "bullets": [
+            "Bottom-up: acha a folha, insere em ordem",
+            "Estourou (> m-1 chaves)? → split",
+            "A mediana sobe ao pai; pode propagar e criar raiz",
+            "É o que mantém a árvore balanceada",
+        ],
+    },
+    {
+        "layout": "bullets",
+        "title": "Remoção — sucessor, redistribuição e fusão",
+        "bullets": [
+            "Nó interno: troca pelo sucessor in-order",
+            "Folha pode ficar em underflow",
+            "Redistribuição: empresta de um irmão",
+            "Fusão: funde com irmão + chave do pai",
+        ],
+    },
+    {
+        "layout": "two_col",
+        "title": "Resumo — o que o código faz",
+        "left_title": "Núcleo — Árvore B em disco",
+        "left": [
+            "Ordem m parametrizável (M em compilação)",
+            "100% em disco: 1 nó por I/O",
+            "Busca · inserção (split) · remoção (merge)",
+            "Persistência por RRN + header",
+        ],
+        "right_title": "Extras",
+        "right": [
+            "Contador de acessos ao disco",
+            "Free list ligável (setReuse)",
+            "printTree · height · exportDot (Graphviz)",
+            "Benchmark CSV + automação (run_all, make_tables)",
+        ],
+    },
+    {
+        "layout": "demo",
+        "title": "Demonstração — o programa rodando",
+        "bullets": [
+            "Compilação → menu → CRUD + métricas",
+            "m=3 e m=5: a árvore fica mais rasa",
+            "Captura real da execução",
+        ],
+        "gif": os.path.join(ASSETS, "demo_btree.gif"),
+        "poster": os.path.join(ASSETS, "demo_poster.png"),
+        "caption": "make M=3/M=5 → menu interativo → grafo exportado pelo programa",
+    },
+    {
+        "layout": "image_full",
+        "title": "Grafos gerados pelo programa",
+        "bullets": [
+            "Exportado pelo programa (Graphviz)",
+            "Cada caixa = nó no disco (RRN)",
+            "m=5: mais chaves por nó → árvore mais rasa",
+        ],
+        "images": [(os.path.join(ASSETS, "graphs_m3_m5.png"),
+                    "Mesma sequência, duas ordens m — à direita a árvore é mais rasa")],
+    },
+    {
+        "layout": "text_image",
+        "title": "Os experimentos — a matriz de testes",
+        "bullets": [
+            "Exp.1 — impacto da ordem m (N=10⁵)",
+            "Exp.2 — escala N (10³–10⁶)",
+            "Exp.3 — ocupação com/sem reuso",
+            "Exp.4 — CPU vs I/O",
+            "Validação em 2 máquinas",
+        ],
+        "images": [(C_IO_N, None)],
+    },
+    {
+        "layout": "bullets",
+        "title": "Metodologia e ambiente",
+        "bullets": [
+            "Driver não interativo → CSV de métricas",
+            "Cada configuração reconstruída do zero",
+            "Modos aleatório e sequencial",
+            "getrusage: CPU usuário / sistema / espera de I/O",
+            "2 máquinas: Notebook × Titan (USP)",
+        ],
+    },
+    {
+        "layout": "text_image",
+        "title": "Métricas utilizadas",
+        "bullets": [
+            "Acessos ao disco — métrica central",
+            "Altura (~ log_m N)",
+            "Ocupação: nós, livres e bytes",
+            "Tempo: wall · CPU (user/sys) · espera de I/O",
+        ],
+        "images": [(C_H_M, None)],
+    },
+    {
+        "layout": "table_image",
+        "title": "Impacto da ordem m — I/O por busca (N=10⁵)",
+        "table": (ORDER_HEADERS, ORDER_ROWS),
+        "images": [(C_IO_M, None)],
+        "footnote": "I/O por busca cai de 13,25 (m=3, altura 14) para 2,00 (m≥512, altura 2). Ganho satura por volta de m≈64-128.",
+    },
+    {
+        "layout": "text_image",
+        "title": "Impacto da ordem m — altura",
+        "bullets": [
+            "Altura ≈ acessos por busca",
+            "m=3 → 14 níveis (fundo demais)",
+            "m cresce → altura despenca em degraus",
+            "m grande → altura 2",
+        ],
+        "images": [(C_H_M, None)],
+    },
+    {
+        "layout": "text_image",
+        "title": "Resultados por operação",
+        "bullets": [
+            "Busca: a mais barata (raiz → folha)",
+            "Inserção: split reescreve nós",
+            "Remoção: a mais cara (redistribui / funde)",
+            "Todas caem com m e saturam juntas",
+        ],
+        "images": [(C_PHASE, None)],
+    },
+    {
+        "layout": "text_image",
+        "title": "Escala do conjunto (mil → 1 milhão)",
+        "bullets": [
+            "N de mil a um milhão de chaves",
+            "Acessos por busca quase não mudam",
+            "Custo logarítmico na base m",
+            "Escalável: cresce o dado, não o custo",
+        ],
+        "images": [(C_IO_N, None)],
+    },
+    {
+        "layout": "table_image",
+        "title": "Reaproveitamento de nós (churn)",
+        "table": (REUSE_HEADERS, REUSE_ROWS),
+        "images": [(C_REUSE, None)],
+        "footnote": "O reaproveitamento economiza ~27-30% do tamanho do arquivo neste workload.",
+    },
+    {
+        "layout": "table_image",
+        "title": "Dois sistemas — tempo (wall)",
+        "table": (MACH_HEADERS, MACH_ROWS),
+        "images": [(C_WALL_M, None)],
+        "footnote": "Mesmo programa, 2 máquinas: acessos a disco idênticos; só o tempo muda — a curva tem a mesma forma.",
+    },
+    {
+        "layout": "two_image",
+        "title": "Dois sistemas — CPU e determinismo",
+        "bullets": [
+            "Tempo é quase todo CPU de sistema (I/O), não espera de disco",
+            "Acessos idênticos: todos os pontos sobre y=x",
+            "Determinística e portável",
+        ],
+        "images": [(C_CPU, "CPU usuário vs sistema (I/O) nas 2 máquinas"),
+                   (C_DET, "Acessos a disco idênticos — pontos sobre y=x")],
+    },
+    {
+        "layout": "text_image",
+        "title": "Dois sistemas — validação cruzada",
+        "bullets": [
+            "Notebook × Titan (USP)",
+            "Acessos a disco idênticos",
+            "Só o tempo varia",
+            "Comparação via compare.py",
+        ],
+        "images": [(C_MACH, None)] if C_MACH else [],
+    },
+    {
+        "layout": "text_image",
+        "title": "Dois sistemas — escala do conjunto",
+        "bullets": [
+            "N até 1 milhão (m=100), nas 2 máquinas",
+            "Tempo cresce devagar (logarítmico)",
+            "Mesma tendência; Titan mais rápido",
+            "Prova prática de escalabilidade",
+        ],
+        "images": [(C_SCALE_M, None)],
+    },
+    {
+        "layout": "two_col",
+        "title": "E se usássemos union no header? (sugestão do prof.)",
+        "left_title": "Como está hoje",
+        "left": [
+            "Header e BNode são tipos separados",
+            "E/S serializa campo a campo (memcpy)",
+            "Header usa 1 página inteira (RRN uniforme)",
+            "Nó livre esconde o próximo em K[1]",
+        ],
+        "right_title": "Com union",
+        "right": [
+            "Página única: header e nós no mesmo tamanho fixo",
+            "Lê/escreve a página inteira → menos código",
+            "FreeNode.next explícito (autodocumentado)",
+            "Custo: portabilidade do binário (padding/endianness)",
+        ],
+    },
+    {
+        "layout": "bullets",
+        "title": "Dificuldades técnicas",
+        "bullets": [
+            "Indexação 1-based (RRN 0 = header)",
+            "Remoção: manter o path para reparar underflow",
+            "eofbit do fstream → resolvido com clear()",
+            "Serialização campo a campo é propensa a erro",
+        ],
+    },
+    {
+        "layout": "two_col",
+        "title": "Vantagens × Desvantagens",
+        "left_title": "Vantagens",
+        "left": [
+            "Altura baixa → poucos acessos",
+            "Sempre balanceada",
+            "Ideal para disco e índices de SGBD",
+            "Determinística + reuso de espaço",
+        ],
+        "right_title": "Desvantagens / custos",
+        "right": [
+            "Nós subocupados (~50% no sequencial)",
+            "Remoção complexa",
+            "m muito grande → mais CPU por nó",
+            "Existe um m ótimo (tamanho de bloco)",
+        ],
+    },
+    {
+        "layout": "bullets",
+        "title": "Aplicações práticas",
+        "bullets": [
+            "SGBDs: MySQL/InnoDB, PostgreSQL, Oracle",
+            "Sistemas de arquivos: NTFS, APFS, ext4, Btrfs",
+            "Chave-valor: SQLite, LMDB, BerkeleyDB",
+            "Uso natural: índice de um banco em disco",
+        ],
+    },
+    {
+        "layout": "two_col",
+        "title": "Ferramentas utilizadas",
+        "left_title": "Implementação & experimentos",
+        "left": [
+            "C++17 (g++ -O2) · GNU Make",
+            "std::fstream (binário, registros fixos)",
+            "Graphviz (grafos) · Python + matplotlib",
+            "python-pptx / reportlab (slides)",
+        ],
+        "right_title": "Processo & reprodutibilidade",
+        "right": [
+            "Versionamento com Git",
+            "Experimentos reprodutíveis (CSV)",
+            "Build parametrizável: make M=<ordem>",
+            "Validação cruzada em 2 máquinas",
+        ],
+    },
+    {
+        "layout": "bullets",
+        "title": "Conclusão",
+        "bullets": [
+            "Árvore B 100% em disco, 1 nó por I/O",
+            "I/O por operação cai com m até saturar (~64-128)",
+            "Free list economiza ~27-30% de espaço",
+            "Determinística: acessos idênticos em 2 máquinas",
+        ],
+    },
+    {
+        "layout": "bullets",
+        "title": "Referências",
+        "bullets": [
+            "Comer, D. (1979). The Ubiquitous B-Tree. ACM Computing Surveys.",
+            "Knuth, D. The Art of Computer Programming, Vol. 3.",
+            "Bayer, R. & McCreight, E. (1972). Large Ordered Indexes.",
+            "Baranauskas, J. A. Slides AED-PG-2026 (Árvores B). DCM / USP.",
+            "Obrigado! Perguntas?",
+        ],
+    },
+]
+
 if __name__ == "__main__":
-    build_pptx(os.path.join(OUT, "APRESENTACAO.pptx"))
-    build_pdf(os.path.join(OUT, "APRESENTACAO.pdf"))
-    print("\nApresentação gerada em:", OUT)
+    build_pptx(os.path.join(OUT, "APRESENTACAO_2.pptx"))
+    build_pdf(os.path.join(OUT, "APRESENTACAO_2.pdf"))
+    print("\nApresentação CLEAN gerada em:", OUT)

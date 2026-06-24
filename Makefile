@@ -3,7 +3,7 @@ CXXFLAGS := -std=c++17 -Wall -Wextra -O2
 M        ?= 5
 
 TARGET  := btree
-SRCS    := main.cpp src/disk_manager.cpp src/btree.cpp
+SRCS    := main.cpp src/disk_manager.cpp src/btree.cpp src/sorted_array.cpp
 OBJS    := $(SRCS:.cpp=.o)
 
 STAMP := .m_stamp_$(M)

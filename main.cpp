@@ -6,8 +6,10 @@
 #include <algorithm>
 #include <vector>
 #include <cstdlib>
+#include <cstdio>
 #include "src/disk_manager.hpp"
 #include "src/btree.hpp"
+#include "src/sorted_array.hpp"
 
 struct ScopedTimer {
     using clock = std::chrono::high_resolution_clock;
@@ -43,6 +45,8 @@ static void showOtherOptionsMenu() {
               << "3. Gerar árvore aleatória (altura mínima)\n"
               << "4. Experimento aleatório\n"
               << "5. Exportar para Graphviz (.dot)\n"
+              << "6. Comparar com Array Ordenado (busca binária)\n"
+              << "7. Experimento aleatório (Array Ordenado)\n"
               << "0. Voltar ao menu principal\n"
               << "> ";
 }
@@ -150,6 +154,140 @@ static double runExperiment(const std::string& basePath) {
     return totalMs;
 }
 
+// Comparação justa Árvore B x Array Ordenado em disco: mesmas chaves, mesmo
+// contador de acessos (1 registro lido/escrito = 1 acesso). Mostra o trade-off:
+// a busca binária do array quase empata, mas a inserção (deslocamento O(n)) explode.
+static void runCompareSortedArray(const std::string& basePath) {
+    int N;
+    std::cout << "Quantidade de chaves N: ";
+    std::cin >> N;
+    if (N <= 0) { std::cout << "N invalido.\n"; return; }
+
+    std::vector<int> keys(N);
+    std::mt19937 rng(42);
+    std::uniform_int_distribution<int> dist(1, N * 10);
+    for (auto& k : keys) k = dist(rng);
+
+    // --- Árvore B ---
+    std::string btPath = basePath + "_cmp_btree.bin";
+    std::remove(btPath.c_str());
+    DiskManager dm(btPath);
+    BTree bt(dm);
+
+    dm.resetCounter();
+    for (int k : keys) bt.insertB(k);
+    long btIns = dm.diskAccesses();
+
+    dm.resetCounter();
+    for (int k : keys) bt.mSearch(k);
+    long btSrch = dm.diskAccesses();
+
+    std::vector<int> delOrder = keys;
+    std::shuffle(delOrder.begin(), delOrder.end(), std::mt19937(99));
+
+    dm.resetCounter();
+    for (int k : delOrder) bt.deleteB(k);
+    long btDel = dm.diskAccesses();
+
+    // --- Array Ordenado ---
+    std::string saPath = basePath + "_cmp_sorted.bin";
+    std::remove(saPath.c_str());
+    SortedArray sa(saPath);
+
+    sa.resetCounter();
+    for (int k : keys) sa.insert(k);
+    long saIns = sa.diskAccesses();
+
+    sa.resetCounter();
+    for (int k : keys) sa.search(k);
+    long saSrch = sa.diskAccesses();
+
+    sa.resetCounter();
+    for (int k : delOrder) sa.remove(k);
+    long saDel = sa.diskAccesses();
+
+    std::cout << std::fixed << std::setprecision(3)
+              << "\n=== Árvore B (ordem " << ORDER << ") x Array Ordenado  (N=" << N << ") ===\n"
+              << "                        | acessos totais | médio por operação\n"
+              << "------------------------+----------------+-------------------\n"
+              << "Inserção  | Árvore B    | " << std::setw(14) << btIns
+              << " | " << btIns / (double)N << "\n"
+              << "          | Array Ord.  | " << std::setw(14) << saIns
+              << " | " << saIns / (double)N << "\n"
+              << "------------------------+----------------+-------------------\n"
+              << "Busca     | Árvore B    | " << std::setw(14) << btSrch
+              << " | " << btSrch / (double)N << "\n"
+              << "          | Array Ord.  | " << std::setw(14) << saSrch
+              << " | " << saSrch / (double)N << "\n"
+              << "------------------------+----------------+-------------------\n"
+              << "Remoção   | Árvore B    | " << std::setw(14) << btDel
+              << " | " << btDel / (double)N << "\n"
+              << "          | Array Ord.  | " << std::setw(14) << saDel
+              << " | " << saDel / (double)N << "\n"
+              << "------------------------+----------------+-------------------\n"
+              << "Inserção: Array é " << (btIns ? saIns / (double)btIns : 0.0)
+              << "x mais cara que a Árvore B (deslocamento O(n)).\n"
+              << "Busca   : Array é " << (btSrch ? saSrch / (double)btSrch : 0.0)
+              << "x a da Árvore B (ambas O(log n)).\n"
+              << "Remoção : Array é " << (btDel ? saDel / (double)btDel : 0.0)
+              << "x mais cara que a Árvore B (deslocamento O(n)).\n";
+
+    std::remove(btPath.c_str());
+    std::remove(saPath.c_str());
+}
+
+// Experimento aleatório só com o Array Ordenado: insere N chaves aleatórias e
+// busca todas, reportando acessos a disco (médio/op) e tempo de CPU.
+static void runSortedArrayExperiment(const std::string& basePath) {
+    int N;
+    std::cout << "Quantidade de chaves N: ";
+    std::cin >> N;
+    if (N <= 0) { std::cout << "N invalido.\n"; return; }
+
+    std::vector<int> keys(N);
+    std::mt19937 rng(42);
+    std::uniform_int_distribution<int> dist(1, N * 10);
+    for (auto& k : keys) k = dist(rng);
+
+    std::string path = basePath + "_sorted_exp.bin";
+    std::remove(path.c_str());
+    SortedArray sa(path);
+
+    sa.resetCounter();
+    auto t0 = std::chrono::high_resolution_clock::now();
+    for (int k : keys) sa.insert(k);
+    auto t1 = std::chrono::high_resolution_clock::now();
+    long insAcc = sa.diskAccesses();
+    double insMs = std::chrono::duration<double, std::milli>(t1 - t0).count();
+
+    sa.resetCounter();
+    t0 = std::chrono::high_resolution_clock::now();
+    for (int k : keys) sa.search(k);
+    t1 = std::chrono::high_resolution_clock::now();
+    long srchAcc = sa.diskAccesses();
+    double srchMs = std::chrono::duration<double, std::milli>(t1 - t0).count();
+
+    sa.resetCounter();
+    std::shuffle(keys.begin(), keys.end(), std::mt19937(99));
+    t0 = std::chrono::high_resolution_clock::now();
+    for (int k : keys) sa.remove(k);
+    t1 = std::chrono::high_resolution_clock::now();
+    long delAcc = sa.diskAccesses();
+    double delMs = std::chrono::duration<double, std::milli>(t1 - t0).count();
+
+    std::cout << std::fixed << std::setprecision(3)
+              << "\n--- Array Ordenado (N=" << N << ", modo=rand) ---\n"
+              << "Inserção : " << insAcc  << " acessos  ("
+              << insAcc / (double)N  << " médio/op)  " << insMs  << " ms\n"
+              << "Busca    : " << srchAcc << " acessos  ("
+              << srchAcc / (double)N << " médio/op)  " << srchMs << " ms\n"
+              << "Remoção  : " << delAcc  << " acessos  ("
+              << delAcc / (double)N  << " médio/op)  " << delMs  << " ms\n"
+              << "Total    : " << insMs + srchMs + delMs << " ms\n";
+
+    std::remove(path.c_str());
+}
+
 static void runOtherOptions(BTree& bt, const std::string& path, double& cumulativeMs) {
     int opt;
     do {
@@ -182,6 +320,10 @@ static void runOtherOptions(BTree& bt, const std::string& path, double& cumulati
                           << "Ou cole o conteúdo de " << dotPath
                           << " em https://dreampuf.github.io/GraphvizOnline\n";
             }
+        } else if (opt == 6) {
+            runCompareSortedArray(path);
+        } else if (opt == 7) {
+            runSortedArrayExperiment(path);
         }
     } while (opt != 0);
 }

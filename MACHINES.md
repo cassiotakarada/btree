@@ -42,26 +42,27 @@ virtualização do WSL2.
 
 ## Máquina B — Titan Server (USP)
 
-> **A PREENCHER** — coletar na própria Titan com:
-> ```bash
-> lscpu | grep -E "Model name|^CPU\(s\)|Thread|Core|Socket|cache"
-> free -h
-> . /etc/os-release; echo "$PRETTY_NAME"; uname -srmo
-> g++ --version | head -1; make --version | head -1; python3 --version
-> ```
-
 | Item | Valor |
 | --- | --- |
 | Função | Execução comparativa |
-| CPU | _a preencher_ |
-| Núcleos / threads | _a preencher_ |
-| Cache | _a preencher_ |
-| Memória RAM | _a preencher_ |
-| Sistema operacional | _a preencher_ |
-| Kernel | _a preencher_ |
-| Compilador | _a preencher_ |
-| Build / ferramentas | _a preencher_ |
-| Armazenamento do `.bin` | _a preencher_ |
+| CPU | AMD Ryzen Threadripper PRO 5975WX (32 cores) |
+| Núcleos / threads | 32 núcleos físicos / 64 threads |
+| Cache | L1d 1 MiB · L2 16 MiB · L3 128 MiB |
+| Memória RAM | 125 GiB total (≈74 GiB disponíveis no momento) |
+| Sistema operacional | Ubuntu 24.04.4 LTS — **bare-metal** (não é WSL) |
+| Kernel | Linux 6.17.0-22-generic (x86_64) |
+| Compilador | g++ (Ubuntu 13.3.0) — C++17, flags `-O2 -Wall -Wextra` |
+| Build / ferramentas | GNU Make 4.3 · Graphviz 2.43.0 · Python 3.12.3 |
+| Armazenamento do `.bin` | ext4 — SSD NVMe (XPG GAMMIX S70 BLADE, 954 GB, raiz `/`); `/home` em RAID de 2 HDDs (md0, 7,3 TB) |
+
+**Armazenamento — SSD vs HDD.** A Titan tem os dois tipos físicos:
+
+| Dispositivo | Tipo | Tamanho | Modelo | Montagem |
+| --- | --- | --- | --- | --- |
+| nvme0n1 | SSD NVMe (ROTA=0) | 954 GB | XPG GAMMIX S70 BLADE | `/` (raiz) — ext4 |
+| sda | HDD (ROTA=1) | 3,6 TB | Seagate ST4000NM000B | parte do RAID |
+| sdb | HDD (ROTA=1) | 3,6 TB | Seagate ST4000NM000B | parte do RAID |
+| md0 | RAID de HDDs | 7,3 TB | (sda+sdb) | `/home` — ext4 |
 
 ---
 
