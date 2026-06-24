@@ -1,5 +1,5 @@
 # Fala da Apresentação — Árvore B em Memória Secundária
-**Versão "teleprompter"** · 37 slides · ~45 min · AED-PG-2026
+**Versão "teleprompter"** · 38 slides · ~45 min · AED-PG-2026
 
 > Esta é a fala em si, em primeira pessoa, como se você estivesse apresentando.
 > Pode ler quase direto. Ajuste o "nós/eu" conforme for em dupla ou sozinho.
@@ -191,12 +191,22 @@ insere de novo. Com o reaproveitamento ligado, o arquivo praticamente não cresc
 reusa os nós livres. Com ele desligado, o arquivo incha. Na prática, a lista de livres
 economizou em torno de 27 a 30 por cento do tamanho do arquivo nesse cenário."
 
-**28. Dois sistemas: tempo (wall)**
+**28. As duas máquinas da avaliação**
+"Antes de comparar o desempenho nas duas máquinas, vale mostrar quais são elas. À
+esquerda, o notebook, nossa referência: um Intel de 8 núcleos, 16 GB de RAM, rodando
+Ubuntu dentro do WSL2, no Windows. À direita, o servidor Titan, da USP: um AMD
+Threadripper de 32 núcleos, 125 GB de RAM, Ubuntu bare-metal, com SSD NVMe. São máquinas
+bem diferentes — uma é um laptop virtualizado, a outra é uma workstation parruda rodando
+direto no hardware. Mas reparem: o software é o mesmo, mesmo compilador e mesmas versões.
+Guardem essa diferença de hardware, porque no próximo slide vem a surpresa: apesar de
+tudo isso, o número de acessos ao disco é idêntico nas duas. Só o tempo muda."
+
+**29. Dois sistemas: tempo (wall)**
 "Agora a validação em duas máquinas. Rodando o mesmo programa no notebook e no Titan, os
 acessos ao disco foram idênticos; só o tempo de relógio mudou. E reparem que as duas
 curvas têm exatamente a mesma forma."
 
-**29. Dois sistemas: CPU e determinismo**
+**30. Dois sistemas: CPU e determinismo**
 "Esse slide explica por que o relógio engana. Do lado esquerdo: o tempo é quase todo CPU
 de sistema, e quase nada de espera de disco. Isso porque a escrita vai para o cache do
 sistema operacional, não direto para o disco físico. Por isso o relógio não é uma métrica
@@ -204,16 +214,16 @@ honesta. Do lado direito está a prova do determinismo: cada ponto é um teste n
 máquinas, e todos caem em cima da reta — ou seja, os acessos foram rigorosamente iguais.
 A estrutura é determinística e portável."
 
-**30. Dois sistemas: validação cruzada**
+**31. Dois sistemas: validação cruzada**
 "Em resumo: notebook contra Titan, os acessos ao disco são idênticos, só o tempo varia, e
 a comparação foi feita de forma automatizada por um script."
 
-**31. Dois sistemas: escala**
+**32. Dois sistemas: escala**
 "E a escala também se confirma nas duas máquinas. Indo até um milhão de chaves, com ordem
 100, o tempo cresce bem devagar, de forma logarítmica, nas duas. Mesma tendência, com o
 Titan rodando mais rápido. É a prova prática da escalabilidade."
 
-**32. E se usássemos union no header?**
+**33. E se usássemos union no header?**
 "Um ponto que o professor levantou: e se a gente usasse um union no cabeçalho? Hoje o
 cabeçalho e o nó são tipos separados, e a gravação é feita campo por campo. Com um union,
 os dois seriam uma página única, do mesmo tamanho fixo: dava para ler e gravar de uma vez
@@ -221,27 +231,27 @@ só, com menos código e menos chance de bug. O custo seria a portabilidade — 
 alinhamento de bytes entre máquinas — mas isso é contornável. No geral, ficaria mais
 limpo, exigindo cuidado com o formato binário."
 
-**33. Dificuldades técnicas**
+**34. Dificuldades técnicas**
 "As dificuldades que a gente teve. A indexação começando do zero, com o cabeçalho na
 posição zero. Na remoção, manter o caminho de volta para consertar os nós. Um detalhe
 chato do C++, o eofbit, que silenciava leituras e a gente resolveu com um clear. E a
 gravação campo por campo, que é trabalhosa e fácil de errar — foi ela, aliás, que
 motivou a ideia do union."
 
-**34. Vantagens × desvantagens**
+**35. Vantagens × desvantagens**
 "Fazendo o balanço. Vantagens: a árvore é baixa, então são poucos acessos; está sempre
 balanceada; é ideal para disco e para índices de banco; e é determinística e econômica
 com o reuso. Desvantagens: os nós podem ficar só metade cheios no caso sequencial; a
 remoção é complexa de implementar; e um m grande demais troca acesso a disco por mais
 trabalho de CPU. Por isso existe aquele m ótimo, do tamanho do bloco."
 
-**35. Aplicações práticas**
+**36. Aplicações práticas**
 "Isso não é só teoria — está em todo lugar. Os bancos de dados usam, como MySQL,
 PostgreSQL e Oracle. Os sistemas de arquivos usam, como NTFS, ext4 e Btrfs. E bancos
 chave-valor também, como SQLite e LMDB. O uso mais natural é exatamente esse: ser o
 índice de um banco de dados em disco."
 
-**36. Conclusão**
+**37. Conclusão**
 "Para concluir, os principais achados. Primeiro: a Árvore B funciona cem por cento em
 disco, com um nó por acesso. Segundo: o número de acessos por operação cai com o m até
 saturar, por volta de 64 a 128 — existe um m ótimo. Terceiro: a lista de livres economiza
@@ -249,7 +259,7 @@ em torno de 30 por cento de espaço. E quarto: a estrutura é determinística, c
 idênticos nas duas máquinas. Rasa, balanceada e econômica — por isso ela é a base de
 bancos de dados e sistemas de arquivos até hoje."
 
-**37. Referências**
+**38. Referências**
 "Essas são as referências que a gente usou — o artigo clássico do Comer, o Knuth, o
 Folk e Zoellick, o trabalho original do Bayer e McCreight, e os slides do professor.
 Muito obrigado, e ficamos à disposição para perguntas."
