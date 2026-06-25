@@ -2,13 +2,5 @@ digraph BTree {
   graph [rankdir=TB, splines=line, nodesep=0.25, ranksep=0.6];
   node  [shape=record, fontname="Helvetica", fontsize=10];
   edge  [arrowsize=0.6];
-  n3 [label="{ RRN 3 | { <a0>  | <a1> 30 | <a2> 60 | <a3> 85 } }"];
-  n3:a0 -> n1;
-  n3:a1 -> n2;
-  n3:a2 -> n4;
-  n3:a3 -> n5;
-  n1 [label="{ RRN 1 | { <a0>  | <a1> 10 | <a2> 20 | <a3> 25 } }"];
-  n2 [label="{ RRN 2 | { <a0>  | <a1> 50 | <a2> 55 } }"];
-  n4 [label="{ RRN 4 | { <a0>  | <a1> 70 | <a2> 80 } }"];
-  n5 [label="{ RRN 5 | { <a0>  | <a1> 90 | <a2> 100 } }"];
+  empty [label="(árvore vazia)"];
 }
